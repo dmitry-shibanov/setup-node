@@ -18,7 +18,6 @@ export const cachePackages = async (type: LockType | string) => {
   let tool = 'npm';
 
   const state = getCacheState();
-  let cachePath: string;
   const primaryKey = core.getState(State.CachePrimaryKey);
 
   if (type === LockType.Yarn) {
@@ -26,9 +25,10 @@ export const cachePackages = async (type: LockType | string) => {
     tool = `yarn${yarnVersion}`;
   }
 
-  const cacheDir = await getDefaultCacheDirectory(tool);
-  cachePath = cacheDir;
-
+  const cachePath = await getDefaultCacheDirectory(tool);
+  core.info(`cachePath is ${cachePath}`);
+  core.info(`primaryKey is ${primaryKey}`);
+  core.info(`state is ${state}`);
   if (isExactKeyMatch(primaryKey, state)) {
     core.info(
       `Cache hit occurred on the primary key ${primaryKey}, not saving cache.`
@@ -36,10 +36,8 @@ export const cachePackages = async (type: LockType | string) => {
     return;
   }
 
-  const cachePaths = cachePath;
-
   try {
-    await cache.saveCache([cachePaths], primaryKey);
+    await cache.saveCache([cachePath], primaryKey);
     core.info(`Cache saved with key: ${primaryKey}`);
   } catch (error) {
     if (error.name === cache.ValidationError.name) {

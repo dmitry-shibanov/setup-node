@@ -43397,6 +43397,8 @@ exports.restoreCache = (type) => __awaiter(void 0, void 0, void 0, function* () 
         tool = `yarn${yarnVersion}`;
     }
     const cachePath = yield cache_1.getDefaultCacheDirectory(tool);
+    core.info(`cachePath is ${cachePath}`);
+    core.info(`primaryKey is ${primaryKey}`);
     const cacheKey = yield cache.restoreCache([cachePath], primaryKey);
     if (!cacheKey) {
         core.info(`Cache not found for input keys: ${primaryKey}`);

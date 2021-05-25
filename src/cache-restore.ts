@@ -15,6 +15,8 @@ export const restoreCache = async (type: LockType | string) => {
   }
 
   const cachePath = await getDefaultCacheDirectory(tool);
+  core.info(`cachePath is ${cachePath}`);
+  core.info(`primaryKey is ${primaryKey}`);
   const cacheKey = await cache.restoreCache([cachePath], primaryKey);
 
   if (!cacheKey) {

@@ -50286,21 +50286,21 @@ function run() {
 exports.cachePackages = (type) => __awaiter(void 0, void 0, void 0, function* () {
     let tool = 'npm';
     const state = getCacheState();
-    let cachePath;
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
     if (type === constants_1.LockType.Yarn) {
         const yarnVersion = yield cache_1.getYarnVersion();
         tool = `yarn${yarnVersion}`;
     }
-    const cacheDir = yield cache_1.getDefaultCacheDirectory(tool);
-    cachePath = cacheDir;
+    const cachePath = yield cache_1.getDefaultCacheDirectory(tool);
+    core.info(`cachePath is ${cachePath}`);
+    core.info(`primaryKey is ${primaryKey}`);
+    core.info(`state is ${state}`);
     if (isExactKeyMatch(primaryKey, state)) {
         core.info(`Cache hit occurred on the primary key ${primaryKey}, not saving cache.`);
         return;
     }
-    const cachePaths = cachePath;
     try {
-        yield cache.saveCache([cachePaths], primaryKey);
+        yield cache.saveCache([cachePath], primaryKey);
         core.info(`Cache saved with key: ${primaryKey}`);
     }
     catch (error) {
