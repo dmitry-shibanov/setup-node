@@ -2,6 +2,8 @@ import * as core from '@actions/core';
 import * as installer from './installer';
 import * as auth from './authutil';
 import * as path from 'path';
+import {restoreCache} from './cache-restore';
+import {Inputs} from './constants';
 import {URL} from 'url';
 import os = require('os');
 
@@ -11,12 +13,13 @@ export async function run() {
     // Version is optional.  If supplied, install / use from the tool cache
     // If not supplied then task is still used to setup proxy, auth, etc...
     //
-    let version = core.getInput('node-version');
+    let version = core.getInput(Inputs.NodeVersion);
     if (!version) {
-      version = core.getInput('version');
+      version = core.getInput(Inputs.Version);
     }
 
-    let arch = core.getInput('architecture');
+    let arch = core.getInput(Inputs.Architecture);
+    const cache = core.getInput(Inputs.Cache);
 
     // if architecture supplied but node-version is not
     // if we don't throw a warning, the already installed x64 node will be used which is not probably what user meant.
@@ -31,18 +34,27 @@ export async function run() {
     }
 
     if (version) {
-      let token = core.getInput('token');
+      let token = core.getInput(Inputs.Token);
       let auth = !token || isGhes() ? undefined : `token ${token}`;
-      let stable = (core.getInput('stable') || 'true').toUpperCase() === 'TRUE';
+      let stable =
+        (core.getInput(Inputs.Stable) || 'true').toUpperCase() === 'TRUE';
       const checkLatest =
-        (core.getInput('check-latest') || 'false').toUpperCase() === 'TRUE';
+        (core.getInput(Inputs.CheckLatest) || 'false').toUpperCase() === 'TRUE';
       await installer.getNode(version, stable, checkLatest, auth, arch);
     }
 
-    const registryUrl: string = core.getInput('registry-url');
-    const alwaysAuth: string = core.getInput('always-auth');
+    const registryUrl: string = core.getInput(Inputs.RegistryUrl);
+    const alwaysAuth: string = core.getInput(Inputs.AlwaysAuth);
     if (registryUrl) {
       auth.configAuthentication(registryUrl, alwaysAuth);
+    }
+
+    if (cache) {
+      if (!isGhes()) {
+        await restoreCache(cache);
+      } else {
+        core.info('Caching is not supported on GHES');
+      }
     }
 
     const matchersPath = path.join(__dirname, '..', '.github');

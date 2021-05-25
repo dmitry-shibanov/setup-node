@@ -3,6 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import {Inputs} from './constants';
 
 export function configAuthentication(registryUrl: string, alwaysAuth: string) {
   const npmrc: string = path.resolve(
@@ -21,7 +22,7 @@ function writeRegistryToFile(
   fileLocation: string,
   alwaysAuth: string
 ) {
-  let scope: string = core.getInput('scope');
+  let scope: string = core.getInput(Inputs.Scope);
   if (!scope && registryUrl.indexOf('npm.pkg.github.com') > -1) {
     scope = github.context.repo.owner;
   }
