@@ -7536,6 +7536,7 @@ function run() {
             }
             let arch = core.getInput(constants_1.Inputs.Architecture);
             const cache = core.getInput(constants_1.Inputs.Cache);
+            core.info(`cache is ${cache}`);
             // if architecture supplied but node-version is not
             // if we don't throw a warning, the already installed x64 node will be used which is not probably what user meant.
             if (arch && !version) {

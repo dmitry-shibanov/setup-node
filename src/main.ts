@@ -20,6 +20,7 @@ export async function run() {
 
     let arch = core.getInput(Inputs.Architecture);
     const cache = core.getInput(Inputs.Cache);
+    core.info(`cache is ${cache}`);
 
     // if architecture supplied but node-version is not
     // if we don't throw a warning, the already installed x64 node will be used which is not probably what user meant.
