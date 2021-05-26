@@ -32,5 +32,5 @@ inputs:
 runs:
   using: 'node12'
   main: 'dist/setup/index.js'
-  post-if: (inputs.cache && inputs.cache.trim())
   post: 'dist/cleanup/index.js'
+  post-if: inputs.cache && inputs.cache.trim()
