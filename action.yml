@@ -33,4 +33,3 @@ runs:
   using: 'node12'
   main: 'dist/setup/index.js'
   post: 'dist/cleanup/index.js'
-  post-if: inputs.cache != ''
