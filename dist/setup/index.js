@@ -43387,6 +43387,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -43397,16 +43404,25 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const cache = __importStar(__webpack_require__(638));
 const core = __importStar(__webpack_require__(470));
+const glob = __importStar(__webpack_require__(281));
+const crypto = __importStar(__webpack_require__(417));
+const fs = __importStar(__webpack_require__(747));
+const stream = __importStar(__webpack_require__(794));
+const util = __importStar(__webpack_require__(669));
+const path = __importStar(__webpack_require__(622));
 const constants_1 = __webpack_require__(694);
 const cache_1 = __webpack_require__(913);
 exports.restoreCache = (type) => __awaiter(void 0, void 0, void 0, function* () {
     let tool = 'npm';
-    const primaryKey = core.getInput(constants_1.Inputs.Key, { required: true });
-    core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
+    const lockKey = core.getInput(constants_1.Inputs.Key, { required: true });
+    const currentOs = process.env.RUNNER_OS;
+    const fileHash = yield hashFile(lockKey);
     if (type === constants_1.LockType.Yarn) {
         const yarnVersion = yield cache_1.getYarnVersion();
         tool = `yarn${yarnVersion}`;
     }
+    const primaryKey = `${currentOs}-${tool}-${fileHash}`;
+    core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
     const cachePath = yield cache_1.getDefaultCacheDirectory(tool);
     core.info(`cachePath is ${cachePath}`);
     core.info(`primaryKey is ${primaryKey}`);
@@ -43421,6 +43437,51 @@ exports.restoreCache = (type) => __awaiter(void 0, void 0, void 0, function* () 
     core.setOutput(constants_1.Outputs.CacheHit, isExactMatch);
     core.info(`Cache restored from key: ${cacheKey}`);
 });
+function hashFile(matchPatterns) {
+    var e_1, _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        let followSymbolicLinks = false;
+        if (process.env.followSymbolicLinks === 'true') {
+            followSymbolicLinks = true;
+        }
+        let hasMatch = false;
+        const githubWorkspace = process.env.GITHUB_WORKSPACE;
+        const result = crypto.createHash('sha256');
+        let count = 0;
+        const globber = yield glob.create(matchPatterns, { followSymbolicLinks });
+        try {
+            for (var _b = __asyncValues(globber.globGenerator()), _c; _c = yield _b.next(), !_c.done;) {
+                const file = _c.value;
+                console.log(file);
+                if (!file.startsWith(`${githubWorkspace}${path.sep}`)) {
+                    console.log(`Ignore '${file}' since it is not under GITHUB_WORKSPACE.`);
+                    continue;
+                }
+                if (fs.statSync(file).isDirectory()) {
+                    console.log(`Skip directory '${file}'.`);
+                    continue;
+                }
+                const hash = crypto.createHash('sha256');
+                const pipeline = util.promisify(stream.pipeline);
+                yield pipeline(fs.createReadStream(file), hash);
+                result.write(hash.digest());
+                count++;
+                if (!hasMatch) {
+                    hasMatch = true;
+                }
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) yield _a.call(_b);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        result.end();
+        return result.digest('hex');
+    });
+}
 
 
 /***/ }),
