@@ -10,7 +10,10 @@ import * as path from 'path';
 import {State, LockType, Inputs, Outputs} from './constants';
 import {getYarnVersion, getDefaultCacheDirectory} from './cache';
 
-export const restoreCache = async (type: LockType | string) => {
+export const restoreCache = async (
+  type: LockType | string,
+  version: string
+) => {
   let tool = 'npm';
 
   const lockKey = core.getInput(Inputs.Key, {required: true});
@@ -22,7 +25,7 @@ export const restoreCache = async (type: LockType | string) => {
     tool = `yarn${yarnVersion}`;
   }
 
-  const primaryKey = `${currentOs}-${tool}-${fileHash}`;
+  const primaryKey = `${currentOs}-${tool}-${version}-${fileHash}`;
   core.saveState(State.CachePrimaryKey, primaryKey);
 
   const cachePath = await getDefaultCacheDirectory(tool);

@@ -7569,7 +7569,7 @@ function run() {
             }
             if (cache) {
                 if (!isGhes()) {
-                    yield cache_restore_1.restoreCache(cache);
+                    yield cache_restore_1.restoreCache(cache, version);
                 }
                 else {
                     core.info('Caching is not supported on GHES');
@@ -43412,7 +43412,7 @@ const util = __importStar(__webpack_require__(669));
 const path = __importStar(__webpack_require__(622));
 const constants_1 = __webpack_require__(694);
 const cache_1 = __webpack_require__(913);
-exports.restoreCache = (type) => __awaiter(void 0, void 0, void 0, function* () {
+exports.restoreCache = (type, version) => __awaiter(void 0, void 0, void 0, function* () {
     let tool = 'npm';
     const lockKey = core.getInput(constants_1.Inputs.Key, { required: true });
     const currentOs = process.env.RUNNER_OS;
@@ -43421,7 +43421,7 @@ exports.restoreCache = (type) => __awaiter(void 0, void 0, void 0, function* () 
         const yarnVersion = yield cache_1.getYarnVersion();
         tool = `yarn${yarnVersion}`;
     }
-    const primaryKey = `${currentOs}-${tool}-${fileHash}`;
+    const primaryKey = `${currentOs}-${tool}-${version}-${fileHash}`;
     core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
     const cachePath = yield cache_1.getDefaultCacheDirectory(tool);
     core.info(`cachePath is ${cachePath}`);
