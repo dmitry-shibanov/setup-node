@@ -52,7 +52,7 @@ const getCmdCommand = (toolName: string, version: string) => {
     cmdCommand = `${toolName}${version}`;
   }
 
-  return toolName;
+  return cmdCommand;
 };
 
 export const isToolSupported = toolName => {

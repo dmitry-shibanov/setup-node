@@ -47762,7 +47762,7 @@ const getCmdCommand = (toolName, version) => {
     if (toolName === 'yarn') {
         cmdCommand = `${toolName}${version}`;
     }
-    return toolName;
+    return cmdCommand;
 };
 exports.isToolSupported = toolName => {
     const arr = Array.of(...Object.values(constants_1.LockType));
