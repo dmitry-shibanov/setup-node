@@ -1,11 +1,11 @@
 import * as core from '@actions/core';
 import * as cache from '@actions/cache';
-import {Inputs, LockType, State} from './constants';
-import {getDefaultCacheDirectory, getYarnVersion} from './cache';
+import {Inputs, State} from './constants';
+import {getDefaultCacheDirectory, isToolSupported} from './cache';
 
 async function run() {
   const cacheLock = core.getInput(Inputs.Cache);
-  if (cacheLock) {
+  if (cacheLock && isToolSupported(cacheLock)) {
     try {
       cachePackages(cacheLock);
     } catch (error) {
@@ -14,18 +14,11 @@ async function run() {
   }
 }
 
-export const cachePackages = async (type: LockType | string) => {
-  let tool = 'npm';
-
+export const cachePackages = async (toolName: string) => {
   const state = getCacheState();
   const primaryKey = core.getState(State.CachePrimaryKey);
 
-  if (type === LockType.Yarn) {
-    const yarnVersion = await getYarnVersion();
-    tool = `yarn${yarnVersion}`;
-  }
-
-  const cachePath = await getDefaultCacheDirectory(tool);
+  const cachePath = await getDefaultCacheDirectory(toolName);
   core.info(`cachePath is ${cachePath}`);
   core.info(`primaryKey is ${primaryKey}`);
   core.info(`state is ${state}`);

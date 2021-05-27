@@ -7,28 +7,18 @@ import * as stream from 'stream';
 import * as util from 'util';
 import * as path from 'path';
 
-import {State, LockType, Inputs, Outputs} from './constants';
-import {getYarnVersion, getDefaultCacheDirectory} from './cache';
+import {State, Inputs, Outputs} from './constants';
+import {getDefaultCacheDirectory} from './cache';
 
-export const restoreCache = async (
-  type: LockType | string,
-  version: string
-) => {
-  let tool = 'npm';
-
+export const restoreCache = async (toolName: string, version: string) => {
   const lockKey = core.getInput(Inputs.Key, {required: true});
   const currentOs = process.env.RUNNER_OS;
   const fileHash = await hashFile(lockKey);
 
-  if (type === LockType.Yarn) {
-    const yarnVersion = await getYarnVersion();
-    tool = `yarn${yarnVersion}`;
-  }
-
-  const primaryKey = `${currentOs}-${tool}-${version}-${fileHash}`;
+  const primaryKey = `${currentOs}-${toolName}-${version}-${fileHash}`;
   core.saveState(State.CachePrimaryKey, primaryKey);
 
-  const cachePath = await getDefaultCacheDirectory(tool);
+  const cachePath = await getDefaultCacheDirectory(toolName);
   core.info(`cachePath is ${cachePath}`);
   core.info(`primaryKey is ${primaryKey}`);
   const cacheKey = await cache.restoreCache([cachePath], primaryKey);

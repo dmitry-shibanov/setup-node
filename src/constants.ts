@@ -14,8 +14,8 @@ export enum Inputs {
 }
 
 export enum LockType {
-  Npm,
-  Yarn
+  Npm = 'npm',
+  Yarn = 'yarn'
 }
 
 export enum State {

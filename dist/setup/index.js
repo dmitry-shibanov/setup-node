@@ -43412,18 +43412,13 @@ const util = __importStar(__webpack_require__(669));
 const path = __importStar(__webpack_require__(622));
 const constants_1 = __webpack_require__(694);
 const cache_1 = __webpack_require__(913);
-exports.restoreCache = (type, version) => __awaiter(void 0, void 0, void 0, function* () {
-    let tool = 'npm';
+exports.restoreCache = (toolName, version) => __awaiter(void 0, void 0, void 0, function* () {
     const lockKey = core.getInput(constants_1.Inputs.Key, { required: true });
     const currentOs = process.env.RUNNER_OS;
     const fileHash = yield hashFile(lockKey);
-    if (type === constants_1.LockType.Yarn) {
-        const yarnVersion = yield cache_1.getYarnVersion();
-        tool = `yarn${yarnVersion}`;
-    }
-    const primaryKey = `${currentOs}-${tool}-${version}-${fileHash}`;
+    const primaryKey = `${currentOs}-${toolName}-${version}-${fileHash}`;
     core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
-    const cachePath = yield cache_1.getDefaultCacheDirectory(tool);
+    const cachePath = yield cache_1.getDefaultCacheDirectory(toolName);
     core.info(`cachePath is ${cachePath}`);
     core.info(`primaryKey is ${primaryKey}`);
     const cacheKey = yield cache.restoreCache([cachePath], primaryKey);
@@ -55401,8 +55396,8 @@ var Inputs;
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
 var LockType;
 (function (LockType) {
-    LockType[LockType["Npm"] = 0] = "Npm";
-    LockType[LockType["Yarn"] = 1] = "Yarn";
+    LockType["Npm"] = "npm";
+    LockType["Yarn"] = "yarn";
 })(LockType = exports.LockType || (exports.LockType = {}));
 var State;
 (function (State) {
@@ -64319,34 +64314,61 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const exec = __importStar(__webpack_require__(986));
+const core = __importStar(__webpack_require__(470));
+const constants_1 = __webpack_require__(694);
 const semver_1 = __webpack_require__(280);
-const toolCommands = {
+const toolCacheCommands = {
     npm: 'npm config get cache',
     yarn1: 'yarn cache dir',
     yarn2: 'yarn config get cacheFolder'
 };
-exports.getYarnVersion = () => __awaiter(void 0, void 0, void 0, function* () {
+const getToolVersion = (toolName, command, regex) => __awaiter(void 0, void 0, void 0, function* () {
     let stdErr;
     let stdOut;
-    let majorVersion;
-    yield exec.exec('yarn --version', undefined, {
+    let toolVersion;
+    yield exec.exec(`${toolName} ${command}`, undefined, {
         listeners: {
             stdout: (err) => (stdOut = err.toString()),
             stderr: (out) => (stdErr = out.toString())
         }
     });
+    core.info(`stdout is ${stdOut}`);
+    core.info(`stdErr is ${stdErr}`);
     if (stdErr) {
         throw new Error(stdErr);
     }
     if (!stdOut) {
-        throw new Error('Could not get version for yarn');
+        throw new Error(`Could not get version for ${toolName}`);
     }
-    return semver_1.major(stdOut);
+    if (regex) {
+        core.info('add regex support');
+        toolVersion = stdOut;
+    }
+    else {
+        toolVersion = semver_1.major(stdOut).toString();
+    }
+    return toolVersion;
 });
-exports.getDefaultCacheDirectory = (tool) => __awaiter(void 0, void 0, void 0, function* () {
+const getCmdCommand = (toolName, version) => {
+    let cmdCommand = toolName;
+    if (toolName === 'yarn') {
+        cmdCommand = `${toolName}${version}`;
+    }
+    return toolName;
+};
+exports.isToolSupported = toolName => {
+    const arr = Array.of(...Object.values(constants_1.LockType));
+    return arr.includes(toolName);
+};
+exports.getDefaultCacheDirectory = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
     let stdOut;
     let stdErr;
-    const toolCommand = toolCommands[tool];
+    if (exports.isToolSupported(toolName)) {
+        core.info(`${toolName} is supported`);
+    }
+    const toolVersion = yield getToolVersion(toolName, '--version');
+    const fullToolName = getCmdCommand(toolName, toolVersion);
+    const toolCommand = toolCacheCommands[fullToolName];
     yield exec.exec(toolCommand, undefined, {
         listeners: {
             stderr: (err) => (stdErr = err.toString()),
