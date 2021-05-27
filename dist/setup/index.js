@@ -43414,21 +43414,18 @@ const constants_1 = __webpack_require__(694);
 const cache_1 = __webpack_require__(913);
 exports.restoreCache = (toolName, version) => __awaiter(void 0, void 0, void 0, function* () {
     const lockKey = core.getInput(constants_1.Inputs.Key, { required: true });
-    const currentOs = process.env.RUNNER_OS;
+    const runnerOs = process.env.RUNNER_OS;
     const fileHash = yield hashFile(lockKey);
-    const primaryKey = `${currentOs}-${toolName}-${version}-${fileHash}`;
+    const primaryKey = `${runnerOs}-${toolName}-${version}-${fileHash}`;
     core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
     const cachePath = yield cache_1.getDefaultCacheDirectory(toolName);
-    core.info(`cachePath is ${cachePath}`);
-    core.info(`primaryKey is ${primaryKey}`);
     const cacheKey = yield cache.restoreCache([cachePath], primaryKey);
     if (!cacheKey) {
-        core.info(`Cache not found for input keys: ${primaryKey}`);
+        core.warning(`Cache not found for input keys: ${primaryKey}`);
         return;
     }
     core.saveState(constants_1.State.CacheMatchedKey, cacheKey);
     const isExactMatch = (primaryKey === cacheKey).toString();
-    core.debug(`isExactMatch is ${isExactMatch}`);
     core.setOutput(constants_1.Outputs.CacheHit, isExactMatch);
     core.info(`Cache restored from key: ${cacheKey}`);
 });
@@ -43449,11 +43446,9 @@ function hashFile(matchPatterns) {
                 const file = _c.value;
                 console.log(file);
                 if (!file.startsWith(`${githubWorkspace}${path.sep}`)) {
-                    console.log(`Ignore '${file}' since it is not under GITHUB_WORKSPACE.`);
                     continue;
                 }
                 if (fs.statSync(file).isDirectory()) {
-                    console.log(`Skip directory '${file}'.`);
                     continue;
                 }
                 const hash = crypto.createHash('sha256');
@@ -64363,8 +64358,8 @@ exports.isToolSupported = toolName => {
 exports.getDefaultCacheDirectory = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
     let stdOut;
     let stdErr;
-    if (exports.isToolSupported(toolName)) {
-        core.info(`${toolName} is supported`);
+    if (!exports.isToolSupported(toolName)) {
+        throw new Error(`${toolName} is not supported`);
     }
     const toolVersion = yield getToolVersion(toolName, '--version');
     const fullToolName = getCmdCommand(toolName, toolVersion);
@@ -64379,7 +64374,7 @@ exports.getDefaultCacheDirectory = (toolName) => __awaiter(void 0, void 0, void 
         throw new Error(stdErr);
     }
     if (!stdOut) {
-        throw new Error('Could not get version for yarn');
+        throw new Error(`Could not get version for ${toolName}`);
     }
     return stdOut;
 });

@@ -12,25 +12,22 @@ import {getDefaultCacheDirectory} from './cache';
 
 export const restoreCache = async (toolName: string, version: string) => {
   const lockKey = core.getInput(Inputs.Key, {required: true});
-  const currentOs = process.env.RUNNER_OS;
+  const runnerOs = process.env.RUNNER_OS;
   const fileHash = await hashFile(lockKey);
 
-  const primaryKey = `${currentOs}-${toolName}-${version}-${fileHash}`;
+  const primaryKey = `${runnerOs}-${toolName}-${version}-${fileHash}`;
   core.saveState(State.CachePrimaryKey, primaryKey);
 
   const cachePath = await getDefaultCacheDirectory(toolName);
-  core.info(`cachePath is ${cachePath}`);
-  core.info(`primaryKey is ${primaryKey}`);
   const cacheKey = await cache.restoreCache([cachePath], primaryKey);
 
   if (!cacheKey) {
-    core.info(`Cache not found for input keys: ${primaryKey}`);
+    core.warning(`Cache not found for input keys: ${primaryKey}`);
     return;
   }
 
   core.saveState(State.CacheMatchedKey, cacheKey);
   const isExactMatch = (primaryKey === cacheKey).toString();
-  core.debug(`isExactMatch is ${isExactMatch}`);
   core.setOutput(Outputs.CacheHit, isExactMatch);
   core.info(`Cache restored from key: ${cacheKey}`);
 };
@@ -49,11 +46,9 @@ async function hashFile(matchPatterns: string): Promise<string> {
   for await (const file of globber.globGenerator()) {
     console.log(file);
     if (!file.startsWith(`${githubWorkspace}${path.sep}`)) {
-      console.log(`Ignore '${file}' since it is not under GITHUB_WORKSPACE.`);
       continue;
     }
     if (fs.statSync(file).isDirectory()) {
-      console.log(`Skip directory '${file}'.`);
       continue;
     }
     const hash = crypto.createHash('sha256');

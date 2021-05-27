@@ -47771,8 +47771,8 @@ exports.isToolSupported = toolName => {
 exports.getDefaultCacheDirectory = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
     let stdOut;
     let stdErr;
-    if (exports.isToolSupported(toolName)) {
-        core.info(`${toolName} is supported`);
+    if (!exports.isToolSupported(toolName)) {
+        throw new Error(`${toolName} is not supported`);
     }
     const toolVersion = yield getToolVersion(toolName, '--version');
     const fullToolName = getCmdCommand(toolName, toolVersion);
@@ -47787,7 +47787,7 @@ exports.getDefaultCacheDirectory = (toolName) => __awaiter(void 0, void 0, void 
         throw new Error(stdErr);
     }
     if (!stdOut) {
-        throw new Error('Could not get version for yarn');
+        throw new Error(`Could not get version for ${toolName}`);
     }
     return stdOut;
 });
@@ -50302,7 +50302,7 @@ function run() {
         const cacheLock = core.getInput(constants_1.Inputs.Cache);
         if (cacheLock && cache_1.isToolSupported(cacheLock)) {
             try {
-                exports.cachePackages(cacheLock);
+                yield cachePackages(cacheLock);
             }
             catch (error) {
                 core.setFailed('Failed to remove private key');
@@ -50310,13 +50310,10 @@ function run() {
         }
     });
 }
-exports.cachePackages = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
+const cachePackages = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
     const state = getCacheState();
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
     const cachePath = yield cache_1.getDefaultCacheDirectory(toolName);
-    core.info(`cachePath is ${cachePath}`);
-    core.info(`primaryKey is ${primaryKey}`);
-    core.info(`state is ${state}`);
     if (isExactKeyMatch(primaryKey, state)) {
         core.info(`Cache hit occurred on the primary key ${primaryKey}, not saving cache.`);
         return;
@@ -50346,14 +50343,12 @@ function getCacheState() {
     }
     return undefined;
 }
-exports.getCacheState = getCacheState;
 function isExactKeyMatch(key, cacheKey) {
     return !!(cacheKey &&
         cacheKey.localeCompare(key, undefined, {
             sensitivity: 'accent'
         }) === 0);
 }
-exports.isExactKeyMatch = isExactKeyMatch;
 run();
 
 

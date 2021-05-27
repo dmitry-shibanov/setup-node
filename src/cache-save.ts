@@ -7,21 +7,18 @@ async function run() {
   const cacheLock = core.getInput(Inputs.Cache);
   if (cacheLock && isToolSupported(cacheLock)) {
     try {
-      cachePackages(cacheLock);
+      await cachePackages(cacheLock);
     } catch (error) {
       core.setFailed('Failed to remove private key');
     }
   }
 }
 
-export const cachePackages = async (toolName: string) => {
+const cachePackages = async (toolName: string) => {
   const state = getCacheState();
   const primaryKey = core.getState(State.CachePrimaryKey);
 
   const cachePath = await getDefaultCacheDirectory(toolName);
-  core.info(`cachePath is ${cachePath}`);
-  core.info(`primaryKey is ${primaryKey}`);
-  core.info(`state is ${state}`);
   if (isExactKeyMatch(primaryKey, state)) {
     core.info(
       `Cache hit occurred on the primary key ${primaryKey}, not saving cache.`
@@ -44,7 +41,7 @@ export const cachePackages = async (toolName: string) => {
   }
 };
 
-export function getCacheState(): string | undefined {
+function getCacheState(): string | undefined {
   const cacheKey = core.getState(State.CacheMatchedKey);
   if (cacheKey) {
     core.debug(`Cache state/key: ${cacheKey}`);
@@ -54,7 +51,7 @@ export function getCacheState(): string | undefined {
   return undefined;
 }
 
-export function isExactKeyMatch(key: string, cacheKey?: string): boolean {
+function isExactKeyMatch(key: string, cacheKey?: string): boolean {
   return !!(
     cacheKey &&
     cacheKey.localeCompare(key, undefined, {

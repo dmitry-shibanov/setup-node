@@ -64,8 +64,8 @@ export const getDefaultCacheDirectory = async (toolName: string) => {
   let stdOut: string | undefined;
   let stdErr: string | undefined;
 
-  if (isToolSupported(toolName)) {
-    core.info(`${toolName} is supported`);
+  if (!isToolSupported(toolName)) {
+    throw new Error(`${toolName} is not supported`);
   }
 
   const toolVersion = await getToolVersion(toolName, '--version');
@@ -84,7 +84,7 @@ export const getDefaultCacheDirectory = async (toolName: string) => {
   }
 
   if (!stdOut) {
-    throw new Error('Could not get version for yarn');
+    throw new Error(`Could not get version for ${toolName}`);
   }
 
   return stdOut;
