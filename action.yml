@@ -33,4 +33,4 @@ runs:
   using: 'node12'
   main: 'dist/setup/index.js'
   post: 'dist/saveCache/index.js'
-  post-if: inputs.cache != ''
+  post-if: inputs.cache != null
