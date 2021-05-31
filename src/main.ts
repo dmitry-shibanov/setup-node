@@ -3,7 +3,6 @@ import * as installer from './installer';
 import * as auth from './authutil';
 import * as path from 'path';
 import {restoreCache} from './cache-restore';
-import {Inputs} from './constants';
 import {URL} from 'url';
 import os = require('os');
 
@@ -13,13 +12,13 @@ export async function run() {
     // Version is optional.  If supplied, install / use from the tool cache
     // If not supplied then task is still used to setup proxy, auth, etc...
     //
-    let version = core.getInput(Inputs.NodeVersion);
+    let version = core.getInput('node-version');
     if (!version) {
-      version = core.getInput(Inputs.Version);
+      version = core.getInput('version');
     }
 
-    let arch = core.getInput(Inputs.Architecture);
-    const cache = core.getInput(Inputs.Cache);
+    let arch = core.getInput('architecture');
+    const cache = core.getInput('cache');
     core.info(`cache is ${cache}`);
 
     // if architecture supplied but node-version is not
@@ -35,17 +34,16 @@ export async function run() {
     }
 
     if (version) {
-      let token = core.getInput(Inputs.Token);
+      let token = core.getInput('token');
       let auth = !token || isGhes() ? undefined : `token ${token}`;
-      let stable =
-        (core.getInput(Inputs.Stable) || 'true').toUpperCase() === 'TRUE';
+      let stable = (core.getInput('stable') || 'true').toUpperCase() === 'TRUE';
       const checkLatest =
-        (core.getInput(Inputs.CheckLatest) || 'false').toUpperCase() === 'TRUE';
+        (core.getInput('check-latest') || 'false').toUpperCase() === 'TRUE';
       await installer.getNode(version, stable, checkLatest, auth, arch);
     }
 
-    const registryUrl: string = core.getInput(Inputs.RegistryUrl);
-    const alwaysAuth: string = core.getInput(Inputs.AlwaysAuth);
+    const registryUrl: string = core.getInput('registry-url');
+    const alwaysAuth: string = core.getInput('always-auth');
     if (registryUrl) {
       auth.configAuthentication(registryUrl, alwaysAuth);
     }

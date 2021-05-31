@@ -5878,21 +5878,6 @@ module.exports = v1;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Inputs;
-(function (Inputs) {
-    Inputs["Cache"] = "cache";
-    Inputs["Key"] = "key";
-    Inputs["RestoreKeys"] = "restore-keys";
-    Inputs["NodeVersion"] = "node-version";
-    Inputs["Version"] = "version";
-    Inputs["Architecture"] = "architecture";
-    Inputs["Token"] = "token";
-    Inputs["Stable"] = "stable";
-    Inputs["CheckLatest"] = "check-latest";
-    Inputs["RegistryUrl"] = "registry-url";
-    Inputs["AlwaysAuth"] = "always-auth";
-    Inputs["Scope"] = "scope";
-})(Inputs = exports.Inputs || (exports.Inputs = {}));
 var LockType;
 (function (LockType) {
     LockType["Npm"] = "npm";
@@ -50335,7 +50320,7 @@ const constants_1 = __webpack_require__(196);
 const cache_utils_1 = __webpack_require__(452);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        const cacheLock = core.getInput(constants_1.Inputs.Cache);
+        const cacheLock = core.getInput('cache');
         try {
             yield cachePackages(cacheLock);
         }

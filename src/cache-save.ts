@@ -1,10 +1,10 @@
 import * as core from '@actions/core';
 import * as cache from '@actions/cache';
-import {Inputs, State} from './constants';
+import {State} from './constants';
 import {getCacheDirectoryPath} from './cache-utils';
 
 async function run() {
-  const cacheLock = core.getInput(Inputs.Cache);
+  const cacheLock = core.getInput('cache');
   try {
     await cachePackages(cacheLock);
   } catch (error) {

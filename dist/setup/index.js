@@ -6567,30 +6567,7 @@ module.exports.default = macosRelease;
 /* 121 */,
 /* 122 */,
 /* 123 */,
-/* 124 */
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-/*
- * Copyright The OpenTelemetry Authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-//# sourceMappingURL=tracer_provider.js.map
-
-/***/ }),
+/* 124 */,
 /* 125 */,
 /* 126 */
 /***/ (function(module) {
@@ -7530,7 +7507,6 @@ const installer = __importStar(__webpack_require__(923));
 const auth = __importStar(__webpack_require__(749));
 const path = __importStar(__webpack_require__(622));
 const cache_restore_1 = __webpack_require__(409);
-const constants_1 = __webpack_require__(694);
 const url_1 = __webpack_require__(835);
 const os = __webpack_require__(87);
 function run() {
@@ -7540,12 +7516,12 @@ function run() {
             // Version is optional.  If supplied, install / use from the tool cache
             // If not supplied then task is still used to setup proxy, auth, etc...
             //
-            let version = core.getInput(constants_1.Inputs.NodeVersion);
+            let version = core.getInput('node-version');
             if (!version) {
-                version = core.getInput(constants_1.Inputs.Version);
+                version = core.getInput('version');
             }
-            let arch = core.getInput(constants_1.Inputs.Architecture);
-            const cache = core.getInput(constants_1.Inputs.Cache);
+            let arch = core.getInput('architecture');
+            const cache = core.getInput('cache');
             core.info(`cache is ${cache}`);
             // if architecture supplied but node-version is not
             // if we don't throw a warning, the already installed x64 node will be used which is not probably what user meant.
@@ -7556,14 +7532,14 @@ function run() {
                 arch = os.arch();
             }
             if (version) {
-                let token = core.getInput(constants_1.Inputs.Token);
+                let token = core.getInput('token');
                 let auth = !token || isGhes() ? undefined : `token ${token}`;
-                let stable = (core.getInput(constants_1.Inputs.Stable) || 'true').toUpperCase() === 'TRUE';
-                const checkLatest = (core.getInput(constants_1.Inputs.CheckLatest) || 'false').toUpperCase() === 'TRUE';
+                let stable = (core.getInput('stable') || 'true').toUpperCase() === 'TRUE';
+                const checkLatest = (core.getInput('check-latest') || 'false').toUpperCase() === 'TRUE';
                 yield installer.getNode(version, stable, checkLatest, auth, arch);
             }
-            const registryUrl = core.getInput(constants_1.Inputs.RegistryUrl);
-            const alwaysAuth = core.getInput(constants_1.Inputs.AlwaysAuth);
+            const registryUrl = core.getInput('registry-url');
+            const alwaysAuth = core.getInput('always-auth');
             if (registryUrl) {
                 auth.configAuthentication(registryUrl, alwaysAuth);
             }
@@ -9304,7 +9280,29 @@ function authenticationPlugin(octokit, options) {
 /* 193 */,
 /* 194 */,
 /* 195 */,
-/* 196 */,
+/* 196 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var LockType;
+(function (LockType) {
+    LockType["Npm"] = "npm";
+    LockType["Yarn"] = "yarn";
+})(LockType = exports.LockType || (exports.LockType = {}));
+var State;
+(function (State) {
+    State["CachePrimaryKey"] = "CACHE_KEY";
+    State["CacheMatchedKey"] = "CACHE_RESULT";
+})(State = exports.State || (exports.State = {}));
+var Outputs;
+(function (Outputs) {
+    Outputs["CacheHit"] = "cache-hit";
+})(Outputs = exports.Outputs || (exports.Outputs = {}));
+
+
+/***/ }),
 /* 197 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -43394,16 +43392,21 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const cache = __importStar(__webpack_require__(638));
 const core = __importStar(__webpack_require__(470));
-const constants_1 = __webpack_require__(694);
+const path_1 = __importDefault(__webpack_require__(622));
+const fs_1 = __importDefault(__webpack_require__(747));
+const constants_1 = __webpack_require__(196);
 const cache_utils_1 = __webpack_require__(452);
 exports.restoreCache = (toolName, version) => __awaiter(void 0, void 0, void 0, function* () {
     if (!cache_utils_1.isPackageManagerCacheSupported(toolName)) {
         throw new Error(`${toolName} is not supported`);
     }
-    const lockKey = core.getInput(constants_1.Inputs.Key, { required: true });
+    const lockKey = getLockFile(toolName);
     const platform = process.env.RUNNER_OS;
     const fileHash = yield cache_utils_1.hashFile(lockKey);
     const primaryKey = `${platform}-${toolName}-${version}-${fileHash}`;
@@ -43419,6 +43422,19 @@ exports.restoreCache = (toolName, version) => __awaiter(void 0, void 0, void 0, 
     core.setOutput(constants_1.Outputs.CacheHit, isExactMatch);
     core.info(`Cache restored from key: ${cacheKey}`);
 });
+const getLockFile = (cacheType) => {
+    let lockFile = 'package-lock.json';
+    const workspace = process.env.GITHUB_WORKSPACE;
+    const rootContent = fs_1.default.readdirSync(workspace);
+    if (cacheType === 'yarn') {
+        lockFile = 'yarn.lock';
+    }
+    const fullLockFile = rootContent.find(item => lockFile === item);
+    if (!fullLockFile) {
+        throw new Error('No package-lock.json or yarn.lock were found');
+    }
+    return path_1.default.resolve(fullLockFile);
+};
 
 
 /***/ }),
@@ -44470,7 +44486,7 @@ __exportStar(__webpack_require__(932), exports);
 __exportStar(__webpack_require__(839), exports);
 __exportStar(__webpack_require__(975), exports);
 __exportStar(__webpack_require__(70), exports);
-__exportStar(__webpack_require__(124), exports);
+__exportStar(__webpack_require__(694), exports);
 __exportStar(__webpack_require__(695), exports);
 var context_base_1 = __webpack_require__(995);
 Object.defineProperty(exports, "Context", { enumerable: true, get: function () { return context_base_1.Context; } });
@@ -44661,7 +44677,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const exec = __importStar(__webpack_require__(986));
-const constants_1 = __webpack_require__(694);
+const constants_1 = __webpack_require__(196);
 const glob = __importStar(__webpack_require__(281));
 const crypto = __importStar(__webpack_require__(417));
 const fs = __importStar(__webpack_require__(747));
@@ -55450,37 +55466,23 @@ exports.Deprecation = Deprecation;
 
 "use strict";
 
+/*
+ * Copyright The OpenTelemetry Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
-var Inputs;
-(function (Inputs) {
-    Inputs["Cache"] = "cache";
-    Inputs["Key"] = "key";
-    Inputs["RestoreKeys"] = "restore-keys";
-    Inputs["NodeVersion"] = "node-version";
-    Inputs["Version"] = "version";
-    Inputs["Architecture"] = "architecture";
-    Inputs["Token"] = "token";
-    Inputs["Stable"] = "stable";
-    Inputs["CheckLatest"] = "check-latest";
-    Inputs["RegistryUrl"] = "registry-url";
-    Inputs["AlwaysAuth"] = "always-auth";
-    Inputs["Scope"] = "scope";
-})(Inputs = exports.Inputs || (exports.Inputs = {}));
-var LockType;
-(function (LockType) {
-    LockType["Npm"] = "npm";
-    LockType["Yarn"] = "yarn";
-})(LockType = exports.LockType || (exports.LockType = {}));
-var State;
-(function (State) {
-    State["CachePrimaryKey"] = "CACHE_KEY";
-    State["CacheMatchedKey"] = "CACHE_RESULT";
-})(State = exports.State || (exports.State = {}));
-var Outputs;
-(function (Outputs) {
-    Outputs["CacheHit"] = "cache-hit";
-})(Outputs = exports.Outputs || (exports.Outputs = {}));
-
+//# sourceMappingURL=tracer_provider.js.map
 
 /***/ }),
 /* 695 */
@@ -56711,7 +56713,6 @@ const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
 const core = __importStar(__webpack_require__(470));
 const github = __importStar(__webpack_require__(469));
-const constants_1 = __webpack_require__(694);
 function configAuthentication(registryUrl, alwaysAuth) {
     const npmrc = path.resolve(process.env['RUNNER_TEMP'] || process.cwd(), '.npmrc');
     if (!registryUrl.endsWith('/')) {
@@ -56721,7 +56722,7 @@ function configAuthentication(registryUrl, alwaysAuth) {
 }
 exports.configAuthentication = configAuthentication;
 function writeRegistryToFile(registryUrl, fileLocation, alwaysAuth) {
-    let scope = core.getInput(constants_1.Inputs.Scope);
+    let scope = core.getInput('scope');
     if (!scope && registryUrl.indexOf('npm.pkg.github.com') > -1) {
         scope = github.context.repo.owner;
     }
