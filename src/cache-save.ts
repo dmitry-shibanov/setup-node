@@ -1,16 +1,14 @@
 import * as core from '@actions/core';
 import * as cache from '@actions/cache';
 import {Inputs, State} from './constants';
-import {getDefaultCacheDirectory, isToolSupported} from './cache';
+import {getCacheDirectoryPath} from './cache-utils';
 
 async function run() {
   const cacheLock = core.getInput(Inputs.Cache);
-  if (cacheLock && isToolSupported(cacheLock)) {
-    try {
-      await cachePackages(cacheLock);
-    } catch (error) {
-      core.setFailed('Failed to remove private key');
-    }
+  try {
+    await cachePackages(cacheLock);
+  } catch (error) {
+    core.setFailed('Failed to remove private key');
   }
 }
 
@@ -18,7 +16,7 @@ const cachePackages = async (toolName: string) => {
   const state = getCacheState();
   const primaryKey = core.getState(State.CachePrimaryKey);
 
-  const cachePath = await getDefaultCacheDirectory(toolName);
+  const cachePath = await getCacheDirectoryPath(toolName);
   if (isExactKeyMatch(primaryKey, state)) {
     core.info(
       `Cache hit occurred on the primary key ${primaryKey}, not saving cache.`

@@ -54,7 +54,7 @@ export async function run() {
       if (!isGhes()) {
         await restoreCache(cache, version);
       } else {
-        core.info('Caching is not supported on GHES');
+        throw new Error('Caching is not supported on GHES');
       }
     }
 

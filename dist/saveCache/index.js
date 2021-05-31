@@ -39252,7 +39252,137 @@ exports.NOOP_METER_PROVIDER = new NoopMeterProvider();
 
 
 /***/ }),
-/* 452 */,
+/* 452 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const exec = __importStar(__webpack_require__(986));
+const constants_1 = __webpack_require__(196);
+const glob = __importStar(__webpack_require__(281));
+const crypto = __importStar(__webpack_require__(417));
+const fs = __importStar(__webpack_require__(747));
+const stream = __importStar(__webpack_require__(794));
+const util = __importStar(__webpack_require__(669));
+const path = __importStar(__webpack_require__(622));
+const toolCacheCommands = {
+    npm: 'npm config get cache',
+    yarn1: 'yarn cache dir',
+    yarn2: 'yarn config get cacheFolder'
+};
+const execHandler = (toolCommand, errMessage) => __awaiter(void 0, void 0, void 0, function* () {
+    let stdOut;
+    let stdErr;
+    yield exec.exec(toolCommand, undefined, {
+        listeners: {
+            stderr: (err) => (stdErr = err.toString()),
+            stdout: (out) => (stdOut = out.toString())
+        }
+    });
+    if (stdErr) {
+        throw new Error(stdErr);
+    }
+    if (!stdOut) {
+        throw new Error(errMessage);
+    }
+    return stdOut;
+});
+const getToolVersion = (toolName, command, regex) => __awaiter(void 0, void 0, void 0, function* () {
+    const stdOut = yield execHandler(`${toolName} ${command}`, `Could not get version for ${toolName}`);
+    if (stdOut.startsWith('1.')) {
+        return '1';
+    }
+    return '2';
+});
+const getCmdCommand = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
+    let cmdCommand = toolName;
+    if (toolName === 'yarn') {
+        const toolVersion = yield getToolVersion(toolName, '--version');
+        cmdCommand = `${toolName}${toolVersion}`;
+    }
+    return cmdCommand;
+});
+exports.isPackageManagerCacheSupported = toolName => {
+    const arr = Array.of(...Object.values(constants_1.LockType));
+    return arr.includes(toolName);
+};
+exports.getCacheDirectoryPath = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
+    const fullToolName = yield getCmdCommand(toolName);
+    const toolCommand = toolCacheCommands[fullToolName];
+    const stdOut = yield execHandler(toolCommand, `Could not get version for ${toolName}`);
+    return stdOut;
+});
+// https://github.com/actions/runner/blob/master/src/Misc/expressionFunc/hashFiles/src/hashFiles.ts
+// replace it, when the issue will be resolved: https://github.com/actions/toolkit/issues/472
+function hashFile(matchPatterns) {
+    var e_1, _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        let hasMatch = false;
+        let followSymbolicLinks = false;
+        if (process.env.followSymbolicLinks === 'true') {
+            followSymbolicLinks = true;
+        }
+        const githubWorkspace = process.env.GITHUB_WORKSPACE;
+        const result = crypto.createHash('sha256');
+        const globber = yield glob.create(matchPatterns, { followSymbolicLinks });
+        try {
+            for (var _b = __asyncValues(globber.globGenerator()), _c; _c = yield _b.next(), !_c.done;) {
+                const file = _c.value;
+                console.log(file);
+                if (!file.startsWith(`${githubWorkspace}${path.sep}`)) {
+                    continue;
+                }
+                if (fs.statSync(file).isDirectory()) {
+                    continue;
+                }
+                const hash = crypto.createHash('sha256');
+                const pipeline = util.promisify(stream.pipeline);
+                yield pipeline(fs.createReadStream(file), hash);
+                result.write(hash.digest());
+                if (!hasMatch) {
+                    hasMatch = true;
+                }
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) yield _a.call(_b);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        result.end();
+        return result.digest('hex');
+    });
+}
+exports.hashFile = hashFile;
+
+
+/***/ }),
 /* 453 */,
 /* 454 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -47699,101 +47829,7 @@ exports.ProxyTracerProvider = ProxyTracerProvider;
 /* 719 */,
 /* 720 */,
 /* 721 */,
-/* 722 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const exec = __importStar(__webpack_require__(986));
-const core = __importStar(__webpack_require__(470));
-const constants_1 = __webpack_require__(196);
-const semver_1 = __webpack_require__(280);
-const toolCacheCommands = {
-    npm: 'npm config get cache',
-    yarn1: 'yarn cache dir',
-    yarn2: 'yarn config get cacheFolder'
-};
-const getToolVersion = (toolName, command, regex) => __awaiter(void 0, void 0, void 0, function* () {
-    let stdErr;
-    let stdOut;
-    let toolVersion;
-    yield exec.exec(`${toolName} ${command}`, undefined, {
-        listeners: {
-            stdout: (err) => (stdOut = err.toString()),
-            stderr: (out) => (stdErr = out.toString())
-        }
-    });
-    core.info(`stdout is ${stdOut}`);
-    core.info(`stdErr is ${stdErr}`);
-    if (stdErr) {
-        throw new Error(stdErr);
-    }
-    if (!stdOut) {
-        throw new Error(`Could not get version for ${toolName}`);
-    }
-    if (regex) {
-        core.info('add regex support');
-        toolVersion = stdOut;
-    }
-    else {
-        toolVersion = semver_1.major(stdOut).toString();
-    }
-    return toolVersion;
-});
-const getCmdCommand = (toolName, version) => {
-    let cmdCommand = toolName;
-    if (toolName === 'yarn') {
-        cmdCommand = `${toolName}${version}`;
-    }
-    return cmdCommand;
-};
-exports.isToolSupported = toolName => {
-    const arr = Array.of(...Object.values(constants_1.LockType));
-    return arr.includes(toolName);
-};
-exports.getDefaultCacheDirectory = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
-    let stdOut;
-    let stdErr;
-    if (!exports.isToolSupported(toolName)) {
-        throw new Error(`${toolName} is not supported`);
-    }
-    const toolVersion = yield getToolVersion(toolName, '--version');
-    const fullToolName = getCmdCommand(toolName, toolVersion);
-    const toolCommand = toolCacheCommands[fullToolName];
-    yield exec.exec(toolCommand, undefined, {
-        listeners: {
-            stderr: (err) => (stdErr = err.toString()),
-            stdout: (out) => (stdOut = out.toString())
-        }
-    });
-    if (stdErr) {
-        throw new Error(stdErr);
-    }
-    if (!stdOut) {
-        throw new Error(`Could not get version for ${toolName}`);
-    }
-    return stdOut;
-});
-
-
-/***/ }),
+/* 722 */,
 /* 723 */,
 /* 724 */
 /***/ (function(module) {
@@ -50296,24 +50332,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 const cache = __importStar(__webpack_require__(692));
 const constants_1 = __webpack_require__(196);
-const cache_1 = __webpack_require__(722);
+const cache_utils_1 = __webpack_require__(452);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const cacheLock = core.getInput(constants_1.Inputs.Cache);
-        if (cacheLock && cache_1.isToolSupported(cacheLock)) {
-            try {
-                yield cachePackages(cacheLock);
-            }
-            catch (error) {
-                core.setFailed('Failed to remove private key');
-            }
+        try {
+            yield cachePackages(cacheLock);
+        }
+        catch (error) {
+            core.setFailed('Failed to remove private key');
         }
     });
 }
 const cachePackages = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
     const state = getCacheState();
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
-    const cachePath = yield cache_1.getDefaultCacheDirectory(toolName);
+    const cachePath = yield cache_utils_1.getCacheDirectoryPath(toolName);
     if (isExactKeyMatch(primaryKey, state)) {
         core.info(`Cache hit occurred on the primary key ${primaryKey}, not saving cache.`);
         return;

@@ -20,7 +20,7 @@ inputs:
     description: Used to pull node distributions from node-versions.  Since there's a default, this is typically not supplied by the user.
     default: ${{ github.token }}
   cache:
-    description: 'Used to specify cache variant'
+    description: 'Used to specify supported package manager to cache in its default directory'
   key:
     description: 'primary key to restore and save modules'
 # TODO: add input to control forcing to pull from cloud or dist. 
@@ -32,4 +32,5 @@ inputs:
 runs:
   using: 'node12'
   main: 'dist/setup/index.js'
-  post: 'dist/cleanup/index.js'
+  post: 'dist/saveCache/index.js'
+  post-if: inputs.cache != ''
