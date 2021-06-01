@@ -13,7 +13,7 @@ const toolCacheCommands = {
   yarn2: 'yarn config get cacheFolder'
 };
 
-const execHandler = async (toolCommand: string, errMessage?: string) => {
+const getCommandOutput = async (toolCommand: string, errMessage?: string) => {
   let stdOut: string | undefined;
   let stdErr: string | undefined;
 
@@ -35,14 +35,14 @@ const execHandler = async (toolCommand: string, errMessage?: string) => {
   return stdOut;
 };
 
-const getToolVersion = async (
-  toolName: string,
+const getpackageManagerVersion = async (
+  packageManager: string,
   command: string,
   regex?: RegExp | string
 ) => {
-  const stdOut = await execHandler(
-    `${toolName} ${command}`,
-    `Could not get version for ${toolName}`
+  const stdOut = await getCommandOutput(
+    `${packageManager} ${command}`,
+    `Could not get version for ${packageManager}`
   );
 
   if (stdOut.startsWith('1.')) {
@@ -52,28 +52,31 @@ const getToolVersion = async (
   return '2';
 };
 
-const getCmdCommand = async (toolName: string) => {
-  let cmdCommand = toolName;
-  if (toolName === 'yarn') {
-    const toolVersion = await getToolVersion(toolName, '--version');
-    cmdCommand = `${toolName}${toolVersion}`;
+const getCmdCommand = async (packageManager: string) => {
+  let cmdCommand = packageManager;
+  if (packageManager === 'yarn') {
+    const toolVersion = await getpackageManagerVersion(
+      packageManager,
+      '--version'
+    );
+    cmdCommand = `${packageManager}${toolVersion}`;
   }
 
   return cmdCommand;
 };
 
-export const isPackageManagerCacheSupported = toolName => {
+export const isPackageManagerCacheSupported = packageManager => {
   const arr = Array.of<string>(...Object.values(LockType));
-  return arr.includes(toolName);
+  return arr.includes(packageManager);
 };
 
-export const getCacheDirectoryPath = async (toolName: string) => {
-  const fullToolName = await getCmdCommand(toolName);
+export const getCacheDirectoryPath = async (packageManager: string) => {
+  const fullToolName = await getCmdCommand(packageManager);
   const toolCommand = toolCacheCommands[fullToolName];
 
-  const stdOut = await execHandler(
+  const stdOut = await getCommandOutput(
     toolCommand,
-    `Could not get version for ${toolName}`
+    `Could not get version for ${packageManager}`
   );
 
   return stdOut;
@@ -91,7 +94,8 @@ export async function hashFile(matchPatterns: string): Promise<string> {
   const result = crypto.createHash('sha256');
   const globber = await glob.create(matchPatterns, {followSymbolicLinks});
   for await (const file of globber.globGenerator()) {
-    console.log(file);
+    console.log(globber);
+    console.log(`fileis ${file}`);
     if (!file.startsWith(`${githubWorkspace}${path.sep}`)) {
       continue;
     }
@@ -107,6 +111,8 @@ export async function hashFile(matchPatterns: string): Promise<string> {
     }
   }
   result.end();
+
+  // node -e "const prmosify = require('util').promisify; const crypto = require('crypto'); const stream = require('stream'); const file = '/Users/dmitryshibanov/Documents/myProjects/setup-node/__tests__/data/package-lock.json'; const resul = crypto.createHash('sha256'); const hash = crypto.createHash('sha256'); const pipeline = prmosify(stream.pipeline); pipeline(fs.createReadStream(file), hash).then((result1) =>{ result.write(hash.digest()); result.end(); console.log(result.digest('hex'))}) "
 
   return result.digest('hex');
 }

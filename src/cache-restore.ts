@@ -10,23 +10,23 @@ import {
   isPackageManagerCacheSupported
 } from './cache-utils';
 
-export const restoreCache = async (toolName: string, version: string) => {
-  if (!isPackageManagerCacheSupported(toolName)) {
-    throw new Error(`${toolName} is not supported`);
+export const restoreCache = async (packageManager: string, version: string) => {
+  if (!isPackageManagerCacheSupported(packageManager)) {
+    throw new Error(`Caching for '${packageManager}'is not supported`);
   }
-  const lockKey = getLockFile(toolName);
+  const lockKey = findLockFile(packageManager);
 
   const platform = process.env.RUNNER_OS;
   const fileHash = await hashFile(lockKey);
 
-  const primaryKey = `${platform}-${toolName}-${version}-${fileHash}`;
+  const primaryKey = `${platform}-${packageManager}-${version}-${fileHash}`;
   core.saveState(State.CachePrimaryKey, primaryKey);
 
-  const cachePath = await getCacheDirectoryPath(toolName);
+  const cachePath = await getCacheDirectoryPath(packageManager);
   const cacheKey = await cache.restoreCache([cachePath], primaryKey);
 
   if (!cacheKey) {
-    core.warning(`Cache not found for input keys: ${primaryKey}`);
+    core.warning(`${packageManager} cache is not found`);
     return;
   }
 
@@ -36,17 +36,19 @@ export const restoreCache = async (toolName: string, version: string) => {
   core.info(`Cache restored from key: ${cacheKey}`);
 };
 
-const getLockFile = (cacheType: string) => {
-  let lockFile = 'package-lock.json';
+const findLockFile = (packageManager: string) => {
+  let lockFiles = ['package-lock.json', 'yarn.lock'];
   const workspace = process.env.GITHUB_WORKSPACE!;
   const rootContent = fs.readdirSync(workspace);
-  if (cacheType === 'yarn') {
-    lockFile = 'yarn.lock';
+  if (packageManager === 'yarn') {
+    lockFiles.splice(0);
   }
 
-  const fullLockFile = rootContent.find(item => lockFile === item);
+  const fullLockFile = rootContent.find(item => lockFiles.includes(item));
   if (!fullLockFile) {
-    throw new Error('No package-lock.json or yarn.lock were found');
+    throw new Error(
+      `No package-lock.json or yarn.lock were found in ${workspace}`
+    );
   }
 
   return path.resolve(fullLockFile);

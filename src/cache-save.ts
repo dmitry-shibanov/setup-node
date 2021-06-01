@@ -12,12 +12,12 @@ async function run() {
   }
 }
 
-const cachePackages = async (toolName: string) => {
+const cachePackages = async (packageManager: string) => {
   const state = getCacheState();
   const primaryKey = core.getState(State.CachePrimaryKey);
 
-  const cachePath = await getCacheDirectoryPath(toolName);
-  if (isExactKeyMatch(primaryKey, state)) {
+  const cachePath = await getCacheDirectoryPath(packageManager);
+  if (primaryKey === state) {
     core.info(
       `Cache hit occurred on the primary key ${primaryKey}, not saving cache.`
     );
@@ -33,8 +33,7 @@ const cachePackages = async (toolName: string) => {
     } else if (error.name === cache.ReserveCacheError.name) {
       core.info(error.message);
     } else {
-      const warningPrefix = '[warning]';
-      core.info(`${warningPrefix}${error.message}`);
+      core.warning(`${error.message}`);
     }
   }
 };
@@ -47,15 +46,6 @@ function getCacheState(): string | undefined {
   }
 
   return undefined;
-}
-
-function isExactKeyMatch(key: string, cacheKey?: string): boolean {
-  return !!(
-    cacheKey &&
-    cacheKey.localeCompare(key, undefined, {
-      sensitivity: 'accent'
-    }) === 0
-  );
 }
 
 run();

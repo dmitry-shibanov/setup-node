@@ -43402,19 +43402,19 @@ const path_1 = __importDefault(__webpack_require__(622));
 const fs_1 = __importDefault(__webpack_require__(747));
 const constants_1 = __webpack_require__(196);
 const cache_utils_1 = __webpack_require__(452);
-exports.restoreCache = (toolName, version) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!cache_utils_1.isPackageManagerCacheSupported(toolName)) {
-        throw new Error(`${toolName} is not supported`);
+exports.restoreCache = (packageManager, version) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!cache_utils_1.isPackageManagerCacheSupported(packageManager)) {
+        throw new Error(`Caching for '${packageManager}'is not supported`);
     }
-    const lockKey = getLockFile(toolName);
+    const lockKey = findLockFile(packageManager);
     const platform = process.env.RUNNER_OS;
     const fileHash = yield cache_utils_1.hashFile(lockKey);
-    const primaryKey = `${platform}-${toolName}-${version}-${fileHash}`;
+    const primaryKey = `${platform}-${packageManager}-${version}-${fileHash}`;
     core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
-    const cachePath = yield cache_utils_1.getCacheDirectoryPath(toolName);
+    const cachePath = yield cache_utils_1.getCacheDirectoryPath(packageManager);
     const cacheKey = yield cache.restoreCache([cachePath], primaryKey);
     if (!cacheKey) {
-        core.warning(`Cache not found for input keys: ${primaryKey}`);
+        core.warning(`${packageManager} cache is not found`);
         return;
     }
     core.saveState(constants_1.State.CacheMatchedKey, cacheKey);
@@ -43422,16 +43422,16 @@ exports.restoreCache = (toolName, version) => __awaiter(void 0, void 0, void 0, 
     core.setOutput(constants_1.Outputs.CacheHit, isExactMatch);
     core.info(`Cache restored from key: ${cacheKey}`);
 });
-const getLockFile = (cacheType) => {
-    let lockFile = 'package-lock.json';
+const findLockFile = (packageManager) => {
+    let lockFiles = ['package-lock.json', 'yarn.lock'];
     const workspace = process.env.GITHUB_WORKSPACE;
     const rootContent = fs_1.default.readdirSync(workspace);
-    if (cacheType === 'yarn') {
-        lockFile = 'yarn.lock';
+    if (packageManager === 'yarn') {
+        lockFiles.splice(0);
     }
-    const fullLockFile = rootContent.find(item => lockFile === item);
+    const fullLockFile = rootContent.find(item => lockFiles.includes(item));
     if (!fullLockFile) {
-        throw new Error('No package-lock.json or yarn.lock were found');
+        throw new Error(`No package-lock.json or yarn.lock were found in ${workspace}`);
     }
     return path_1.default.resolve(fullLockFile);
 };
@@ -44689,7 +44689,7 @@ const toolCacheCommands = {
     yarn1: 'yarn cache dir',
     yarn2: 'yarn config get cacheFolder'
 };
-const execHandler = (toolCommand, errMessage) => __awaiter(void 0, void 0, void 0, function* () {
+const getCommandOutput = (toolCommand, errMessage) => __awaiter(void 0, void 0, void 0, function* () {
     let stdOut;
     let stdErr;
     yield exec.exec(toolCommand, undefined, {
@@ -44706,29 +44706,29 @@ const execHandler = (toolCommand, errMessage) => __awaiter(void 0, void 0, void 
     }
     return stdOut;
 });
-const getToolVersion = (toolName, command, regex) => __awaiter(void 0, void 0, void 0, function* () {
-    const stdOut = yield execHandler(`${toolName} ${command}`, `Could not get version for ${toolName}`);
+const getpackageManagerVersion = (packageManager, command, regex) => __awaiter(void 0, void 0, void 0, function* () {
+    const stdOut = yield getCommandOutput(`${packageManager} ${command}`, `Could not get version for ${packageManager}`);
     if (stdOut.startsWith('1.')) {
         return '1';
     }
     return '2';
 });
-const getCmdCommand = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
-    let cmdCommand = toolName;
-    if (toolName === 'yarn') {
-        const toolVersion = yield getToolVersion(toolName, '--version');
-        cmdCommand = `${toolName}${toolVersion}`;
+const getCmdCommand = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
+    let cmdCommand = packageManager;
+    if (packageManager === 'yarn') {
+        const toolVersion = yield getpackageManagerVersion(packageManager, '--version');
+        cmdCommand = `${packageManager}${toolVersion}`;
     }
     return cmdCommand;
 });
-exports.isPackageManagerCacheSupported = toolName => {
+exports.isPackageManagerCacheSupported = packageManager => {
     const arr = Array.of(...Object.values(constants_1.LockType));
-    return arr.includes(toolName);
+    return arr.includes(packageManager);
 };
-exports.getCacheDirectoryPath = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
-    const fullToolName = yield getCmdCommand(toolName);
+exports.getCacheDirectoryPath = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
+    const fullToolName = yield getCmdCommand(packageManager);
     const toolCommand = toolCacheCommands[fullToolName];
-    const stdOut = yield execHandler(toolCommand, `Could not get version for ${toolName}`);
+    const stdOut = yield getCommandOutput(toolCommand, `Could not get version for ${packageManager}`);
     return stdOut;
 });
 // https://github.com/actions/runner/blob/master/src/Misc/expressionFunc/hashFiles/src/hashFiles.ts
@@ -44747,7 +44747,8 @@ function hashFile(matchPatterns) {
         try {
             for (var _b = __asyncValues(globber.globGenerator()), _c; _c = yield _b.next(), !_c.done;) {
                 const file = _c.value;
-                console.log(file);
+                console.log(globber);
+                console.log(`fileis ${file}`);
                 if (!file.startsWith(`${githubWorkspace}${path.sep}`)) {
                     continue;
                 }
@@ -44771,6 +44772,7 @@ function hashFile(matchPatterns) {
             finally { if (e_1) throw e_1.error; }
         }
         result.end();
+        // node -e "const prmosify = require('util').promisify; const crypto = require('crypto'); const stream = require('stream'); const file = '/Users/dmitryshibanov/Documents/myProjects/setup-node/__tests__/data/package-lock.json'; const resul = crypto.createHash('sha256'); const hash = crypto.createHash('sha256'); const pipeline = prmosify(stream.pipeline); pipeline(fs.createReadStream(file), hash).then((result1) =>{ result.write(hash.digest()); result.end(); console.log(result.digest('hex'))}) "
         return result.digest('hex');
     });
 }

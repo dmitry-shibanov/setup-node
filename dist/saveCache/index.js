@@ -39279,7 +39279,7 @@ const toolCacheCommands = {
     yarn1: 'yarn cache dir',
     yarn2: 'yarn config get cacheFolder'
 };
-const execHandler = (toolCommand, errMessage) => __awaiter(void 0, void 0, void 0, function* () {
+const getCommandOutput = (toolCommand, errMessage) => __awaiter(void 0, void 0, void 0, function* () {
     let stdOut;
     let stdErr;
     yield exec.exec(toolCommand, undefined, {
@@ -39296,29 +39296,29 @@ const execHandler = (toolCommand, errMessage) => __awaiter(void 0, void 0, void 
     }
     return stdOut;
 });
-const getToolVersion = (toolName, command, regex) => __awaiter(void 0, void 0, void 0, function* () {
-    const stdOut = yield execHandler(`${toolName} ${command}`, `Could not get version for ${toolName}`);
+const getpackageManagerVersion = (packageManager, command, regex) => __awaiter(void 0, void 0, void 0, function* () {
+    const stdOut = yield getCommandOutput(`${packageManager} ${command}`, `Could not get version for ${packageManager}`);
     if (stdOut.startsWith('1.')) {
         return '1';
     }
     return '2';
 });
-const getCmdCommand = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
-    let cmdCommand = toolName;
-    if (toolName === 'yarn') {
-        const toolVersion = yield getToolVersion(toolName, '--version');
-        cmdCommand = `${toolName}${toolVersion}`;
+const getCmdCommand = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
+    let cmdCommand = packageManager;
+    if (packageManager === 'yarn') {
+        const toolVersion = yield getpackageManagerVersion(packageManager, '--version');
+        cmdCommand = `${packageManager}${toolVersion}`;
     }
     return cmdCommand;
 });
-exports.isPackageManagerCacheSupported = toolName => {
+exports.isPackageManagerCacheSupported = packageManager => {
     const arr = Array.of(...Object.values(constants_1.LockType));
-    return arr.includes(toolName);
+    return arr.includes(packageManager);
 };
-exports.getCacheDirectoryPath = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
-    const fullToolName = yield getCmdCommand(toolName);
+exports.getCacheDirectoryPath = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
+    const fullToolName = yield getCmdCommand(packageManager);
     const toolCommand = toolCacheCommands[fullToolName];
-    const stdOut = yield execHandler(toolCommand, `Could not get version for ${toolName}`);
+    const stdOut = yield getCommandOutput(toolCommand, `Could not get version for ${packageManager}`);
     return stdOut;
 });
 // https://github.com/actions/runner/blob/master/src/Misc/expressionFunc/hashFiles/src/hashFiles.ts
@@ -39337,7 +39337,8 @@ function hashFile(matchPatterns) {
         try {
             for (var _b = __asyncValues(globber.globGenerator()), _c; _c = yield _b.next(), !_c.done;) {
                 const file = _c.value;
-                console.log(file);
+                console.log(globber);
+                console.log(`fileis ${file}`);
                 if (!file.startsWith(`${githubWorkspace}${path.sep}`)) {
                     continue;
                 }
@@ -39361,6 +39362,7 @@ function hashFile(matchPatterns) {
             finally { if (e_1) throw e_1.error; }
         }
         result.end();
+        // node -e "const prmosify = require('util').promisify; const crypto = require('crypto'); const stream = require('stream'); const file = '/Users/dmitryshibanov/Documents/myProjects/setup-node/__tests__/data/package-lock.json'; const resul = crypto.createHash('sha256'); const hash = crypto.createHash('sha256'); const pipeline = prmosify(stream.pipeline); pipeline(fs.createReadStream(file), hash).then((result1) =>{ result.write(hash.digest()); result.end(); console.log(result.digest('hex'))}) "
         return result.digest('hex');
     });
 }
@@ -50329,11 +50331,11 @@ function run() {
         }
     });
 }
-const cachePackages = (toolName) => __awaiter(void 0, void 0, void 0, function* () {
+const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
     const state = getCacheState();
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
-    const cachePath = yield cache_utils_1.getCacheDirectoryPath(toolName);
-    if (isExactKeyMatch(primaryKey, state)) {
+    const cachePath = yield cache_utils_1.getCacheDirectoryPath(packageManager);
+    if (primaryKey === state) {
         core.info(`Cache hit occurred on the primary key ${primaryKey}, not saving cache.`);
         return;
     }
@@ -50349,8 +50351,7 @@ const cachePackages = (toolName) => __awaiter(void 0, void 0, void 0, function* 
             core.info(error.message);
         }
         else {
-            const warningPrefix = '[warning]';
-            core.info(`${warningPrefix}${error.message}`);
+            core.warning(`${error.message}`);
         }
     }
 });
@@ -50361,12 +50362,6 @@ function getCacheState() {
         return cacheKey;
     }
     return undefined;
-}
-function isExactKeyMatch(key, cacheKey) {
-    return !!(cacheKey &&
-        cacheKey.localeCompare(key, undefined, {
-            sensitivity: 'accent'
-        }) === 0);
 }
 run();
 
