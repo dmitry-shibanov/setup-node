@@ -94,8 +94,6 @@ export async function hashFile(matchPatterns: string): Promise<string> {
   const result = crypto.createHash('sha256');
   const globber = await glob.create(matchPatterns, {followSymbolicLinks});
   for await (const file of globber.globGenerator()) {
-    console.log(globber);
-    console.log(`fileis ${file}`);
     if (!file.startsWith(`${githubWorkspace}${path.sep}`)) {
       continue;
     }
@@ -111,8 +109,6 @@ export async function hashFile(matchPatterns: string): Promise<string> {
     }
   }
   result.end();
-
-  // node -e "const prmosify = require('util').promisify; const crypto = require('crypto'); const stream = require('stream'); const file = '/Users/dmitryshibanov/Documents/myProjects/setup-node/__tests__/data/package-lock.json'; const resul = crypto.createHash('sha256'); const hash = crypto.createHash('sha256'); const pipeline = prmosify(stream.pipeline); pipeline(fs.createReadStream(file), hash).then((result1) =>{ result.write(hash.digest()); result.end(); console.log(result.digest('hex'))}) "
 
   return result.digest('hex');
 }

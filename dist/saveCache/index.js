@@ -39337,8 +39337,6 @@ function hashFile(matchPatterns) {
         try {
             for (var _b = __asyncValues(globber.globGenerator()), _c; _c = yield _b.next(), !_c.done;) {
                 const file = _c.value;
-                console.log(globber);
-                console.log(`fileis ${file}`);
                 if (!file.startsWith(`${githubWorkspace}${path.sep}`)) {
                     continue;
                 }
@@ -39362,7 +39360,6 @@ function hashFile(matchPatterns) {
             finally { if (e_1) throw e_1.error; }
         }
         result.end();
-        // node -e "const prmosify = require('util').promisify; const crypto = require('crypto'); const stream = require('stream'); const file = '/Users/dmitryshibanov/Documents/myProjects/setup-node/__tests__/data/package-lock.json'; const resul = crypto.createHash('sha256'); const hash = crypto.createHash('sha256'); const pipeline = prmosify(stream.pipeline); pipeline(fs.createReadStream(file), hash).then((result1) =>{ result.write(hash.digest()); result.end(); console.log(result.digest('hex'))}) "
         return result.digest('hex');
     });
 }
