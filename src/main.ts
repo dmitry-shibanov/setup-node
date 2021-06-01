@@ -19,7 +19,6 @@ export async function run() {
 
     let arch = core.getInput('architecture');
     const cache = core.getInput('cache');
-    core.info(`cache is ${cache}`);
 
     // if architecture supplied but node-version is not
     // if we don't throw a warning, the already installed x64 node will be used which is not probably what user meant.
@@ -50,7 +49,7 @@ export async function run() {
 
     if (cache) {
       if (!isGhes()) {
-        await restoreCache(cache, version);
+        await restoreCache(cache);
       } else {
         throw new Error('Caching is not supported on GHES');
       }

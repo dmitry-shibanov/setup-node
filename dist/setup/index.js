@@ -7522,7 +7522,6 @@ function run() {
             }
             let arch = core.getInput('architecture');
             const cache = core.getInput('cache');
-            core.info(`cache is ${cache}`);
             // if architecture supplied but node-version is not
             // if we don't throw a warning, the already installed x64 node will be used which is not probably what user meant.
             if (arch && !version) {
@@ -7545,7 +7544,7 @@ function run() {
             }
             if (cache) {
                 if (!isGhes()) {
-                    yield cache_restore_1.restoreCache(cache, version);
+                    yield cache_restore_1.restoreCache(cache);
                 }
                 else {
                     throw new Error('Caching is not supported on GHES');
@@ -43402,19 +43401,19 @@ const path_1 = __importDefault(__webpack_require__(622));
 const fs_1 = __importDefault(__webpack_require__(747));
 const constants_1 = __webpack_require__(196);
 const cache_utils_1 = __webpack_require__(452);
-exports.restoreCache = (packageManager, version) => __awaiter(void 0, void 0, void 0, function* () {
+exports.restoreCache = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
     if (!cache_utils_1.isPackageManagerCacheSupported(packageManager)) {
         throw new Error(`Caching for '${packageManager}'is not supported`);
     }
-    const lockKey = findLockFile(packageManager);
     const platform = process.env.RUNNER_OS;
-    const fileHash = yield cache_utils_1.hashFile(lockKey);
-    const primaryKey = `${platform}-${packageManager}-${version}-${fileHash}`;
+    const lockFilePath = findLockFile(packageManager);
+    const fileHash = yield cache_utils_1.hashFile(lockFilePath);
+    const primaryKey = `${platform}-${packageManager}-${fileHash}`;
     core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
     const cachePath = yield cache_utils_1.getCacheDirectoryPath(packageManager);
     const cacheKey = yield cache.restoreCache([cachePath], primaryKey);
     if (!cacheKey) {
-        core.warning(`${packageManager} cache is not found`);
+        core.info(`${packageManager} cache is not found`);
         return;
     }
     core.saveState(constants_1.State.CacheMatchedKey, cacheKey);
@@ -43423,12 +43422,15 @@ exports.restoreCache = (packageManager, version) => __awaiter(void 0, void 0, vo
     core.info(`Cache restored from key: ${cacheKey}`);
 });
 const findLockFile = (packageManager) => {
-    let lockFiles = ['package-lock.json', 'yarn.lock'];
+    let lockFiles;
+    if (packageManager === 'npm') {
+        lockFiles = cache_utils_1.supportedPackageManagers.npm.lockFilePatterns;
+    }
+    else {
+        lockFiles = cache_utils_1.supportedPackageManagers.yarn1.lockFilePatterns;
+    }
     const workspace = process.env.GITHUB_WORKSPACE;
     const rootContent = fs_1.default.readdirSync(workspace);
-    if (packageManager === 'yarn') {
-        lockFiles.splice(0);
-    }
     const fullLockFile = rootContent.find(item => lockFiles.includes(item));
     if (!fullLockFile) {
         throw new Error(`No package-lock.json or yarn.lock were found in ${workspace}`);
@@ -44684,12 +44686,21 @@ const fs = __importStar(__webpack_require__(747));
 const stream = __importStar(__webpack_require__(794));
 const util = __importStar(__webpack_require__(669));
 const path = __importStar(__webpack_require__(622));
-const toolCacheCommands = {
-    npm: 'npm config get cache',
-    yarn1: 'yarn cache dir',
-    yarn2: 'yarn config get cacheFolder'
+exports.supportedPackageManagers = {
+    npm: {
+        lockFilePatterns: ['package-lock.json', 'yarn.lock'],
+        getCacheFolderCommand: 'npm config get cache'
+    },
+    yarn1: {
+        lockFilePatterns: ['yarn.lock'],
+        getCacheFolderCommand: 'yarn cache dir'
+    },
+    yarn2: {
+        lockFilePatterns: ['yarn.lock'],
+        getCacheFolderCommand: 'yarn config get cacheFolder'
+    }
 };
-const getCommandOutput = (toolCommand, errMessage) => __awaiter(void 0, void 0, void 0, function* () {
+const getCommandOutput = (toolCommand) => __awaiter(void 0, void 0, void 0, function* () {
     let stdOut;
     let stdErr;
     yield exec.exec(toolCommand, undefined, {
@@ -44701,13 +44712,13 @@ const getCommandOutput = (toolCommand, errMessage) => __awaiter(void 0, void 0, 
     if (stdErr) {
         throw new Error(stdErr);
     }
-    if (!stdOut) {
-        throw new Error(errMessage);
-    }
     return stdOut;
 });
-const getpackageManagerVersion = (packageManager, command, regex) => __awaiter(void 0, void 0, void 0, function* () {
-    const stdOut = yield getCommandOutput(`${packageManager} ${command}`, `Could not get version for ${packageManager}`);
+const getpackageManagerVersion = (packageManager, command) => __awaiter(void 0, void 0, void 0, function* () {
+    const stdOut = yield getCommandOutput(`${packageManager} ${command}`);
+    if (!stdOut) {
+        throw new Error(`Could not get version for ${packageManager}`);
+    }
     if (stdOut.startsWith('1.')) {
         return '1';
     }
@@ -44726,9 +44737,23 @@ exports.isPackageManagerCacheSupported = packageManager => {
     return arr.includes(packageManager);
 };
 exports.getCacheDirectoryPath = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
-    const fullToolName = yield getCmdCommand(packageManager);
-    const toolCommand = toolCacheCommands[fullToolName];
-    const stdOut = yield getCommandOutput(toolCommand, `Could not get version for ${packageManager}`);
+    let packageManagerInfo;
+    if (packageManager === 'npm') {
+        packageManagerInfo = exports.supportedPackageManagers.npm;
+    }
+    else if (packageManager === 'yarn') {
+        const yarnVersion = yield getpackageManagerVersion('yarn', '--version');
+        if (yarnVersion.startsWith('1.')) {
+            packageManagerInfo = exports.supportedPackageManagers.yarn1;
+        }
+        else {
+            packageManagerInfo = exports.supportedPackageManagers.yarn2;
+        }
+    }
+    const stdOut = yield getCommandOutput(packageManagerInfo.getCacheFolderCommand);
+    if (!stdOut) {
+        throw new Error(`Could not get version for ${packageManager}`);
+    }
     return stdOut;
 });
 // https://github.com/actions/runner/blob/master/src/Misc/expressionFunc/hashFiles/src/hashFiles.ts

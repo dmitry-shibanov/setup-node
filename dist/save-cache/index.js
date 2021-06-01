@@ -39274,12 +39274,21 @@ const fs = __importStar(__webpack_require__(747));
 const stream = __importStar(__webpack_require__(794));
 const util = __importStar(__webpack_require__(669));
 const path = __importStar(__webpack_require__(622));
-const toolCacheCommands = {
-    npm: 'npm config get cache',
-    yarn1: 'yarn cache dir',
-    yarn2: 'yarn config get cacheFolder'
+exports.supportedPackageManagers = {
+    npm: {
+        lockFilePatterns: ['package-lock.json', 'yarn.lock'],
+        getCacheFolderCommand: 'npm config get cache'
+    },
+    yarn1: {
+        lockFilePatterns: ['yarn.lock'],
+        getCacheFolderCommand: 'yarn cache dir'
+    },
+    yarn2: {
+        lockFilePatterns: ['yarn.lock'],
+        getCacheFolderCommand: 'yarn config get cacheFolder'
+    }
 };
-const getCommandOutput = (toolCommand, errMessage) => __awaiter(void 0, void 0, void 0, function* () {
+const getCommandOutput = (toolCommand) => __awaiter(void 0, void 0, void 0, function* () {
     let stdOut;
     let stdErr;
     yield exec.exec(toolCommand, undefined, {
@@ -39291,13 +39300,13 @@ const getCommandOutput = (toolCommand, errMessage) => __awaiter(void 0, void 0, 
     if (stdErr) {
         throw new Error(stdErr);
     }
-    if (!stdOut) {
-        throw new Error(errMessage);
-    }
     return stdOut;
 });
-const getpackageManagerVersion = (packageManager, command, regex) => __awaiter(void 0, void 0, void 0, function* () {
-    const stdOut = yield getCommandOutput(`${packageManager} ${command}`, `Could not get version for ${packageManager}`);
+const getpackageManagerVersion = (packageManager, command) => __awaiter(void 0, void 0, void 0, function* () {
+    const stdOut = yield getCommandOutput(`${packageManager} ${command}`);
+    if (!stdOut) {
+        throw new Error(`Could not get version for ${packageManager}`);
+    }
     if (stdOut.startsWith('1.')) {
         return '1';
     }
@@ -39316,9 +39325,23 @@ exports.isPackageManagerCacheSupported = packageManager => {
     return arr.includes(packageManager);
 };
 exports.getCacheDirectoryPath = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
-    const fullToolName = yield getCmdCommand(packageManager);
-    const toolCommand = toolCacheCommands[fullToolName];
-    const stdOut = yield getCommandOutput(toolCommand, `Could not get version for ${packageManager}`);
+    let packageManagerInfo;
+    if (packageManager === 'npm') {
+        packageManagerInfo = exports.supportedPackageManagers.npm;
+    }
+    else if (packageManager === 'yarn') {
+        const yarnVersion = yield getpackageManagerVersion('yarn', '--version');
+        if (yarnVersion.startsWith('1.')) {
+            packageManagerInfo = exports.supportedPackageManagers.yarn1;
+        }
+        else {
+            packageManagerInfo = exports.supportedPackageManagers.yarn2;
+        }
+    }
+    const stdOut = yield getCommandOutput(packageManagerInfo.getCacheFolderCommand);
+    if (!stdOut) {
+        throw new Error(`Could not get version for ${packageManager}`);
+    }
     return stdOut;
 });
 // https://github.com/actions/runner/blob/master/src/Misc/expressionFunc/hashFiles/src/hashFiles.ts
@@ -50329,7 +50352,7 @@ function run() {
     });
 }
 const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
-    const state = getCacheState();
+    const state = core.getState(constants_1.State.CacheMatchedKey);
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
     const cachePath = yield cache_utils_1.getCacheDirectoryPath(packageManager);
     if (primaryKey === state) {
@@ -50352,14 +50375,6 @@ const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, func
         }
     }
 });
-function getCacheState() {
-    const cacheKey = core.getState(constants_1.State.CacheMatchedKey);
-    if (cacheKey) {
-        core.debug(`Cache state/key: ${cacheKey}`);
-        return cacheKey;
-    }
-    return undefined;
-}
 run();
 
 

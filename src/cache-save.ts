@@ -13,7 +13,7 @@ async function run() {
 }
 
 const cachePackages = async (packageManager: string) => {
-  const state = getCacheState();
+  const state = core.getState(State.CacheMatchedKey);
   const primaryKey = core.getState(State.CachePrimaryKey);
 
   const cachePath = await getCacheDirectoryPath(packageManager);
@@ -37,15 +37,5 @@ const cachePackages = async (packageManager: string) => {
     }
   }
 };
-
-function getCacheState(): string | undefined {
-  const cacheKey = core.getState(State.CacheMatchedKey);
-  if (cacheKey) {
-    core.debug(`Cache state/key: ${cacheKey}`);
-    return cacheKey;
-  }
-
-  return undefined;
-}
 
 run();

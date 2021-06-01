@@ -7,13 +7,22 @@ import * as stream from 'stream';
 import * as util from 'util';
 import * as path from 'path';
 
-const toolCacheCommands = {
-  npm: 'npm config get cache',
-  yarn1: 'yarn cache dir',
-  yarn2: 'yarn config get cacheFolder'
+export const supportedPackageManagers = {
+  npm: {
+    lockFilePatterns: ['package-lock.json', 'yarn.lock'],
+    getCacheFolderCommand: 'npm config get cache'
+  },
+  yarn1: {
+    lockFilePatterns: ['yarn.lock'],
+    getCacheFolderCommand: 'yarn cache dir'
+  },
+  yarn2: {
+    lockFilePatterns: ['yarn.lock'],
+    getCacheFolderCommand: 'yarn config get cacheFolder'
+  }
 };
 
-const getCommandOutput = async (toolCommand: string, errMessage?: string) => {
+const getCommandOutput = async (toolCommand: string) => {
   let stdOut: string | undefined;
   let stdErr: string | undefined;
 
@@ -28,22 +37,18 @@ const getCommandOutput = async (toolCommand: string, errMessage?: string) => {
     throw new Error(stdErr);
   }
 
-  if (!stdOut) {
-    throw new Error(errMessage);
-  }
-
   return stdOut;
 };
 
 const getpackageManagerVersion = async (
   packageManager: string,
-  command: string,
-  regex?: RegExp | string
+  command: string
 ) => {
-  const stdOut = await getCommandOutput(
-    `${packageManager} ${command}`,
-    `Could not get version for ${packageManager}`
-  );
+  const stdOut = await getCommandOutput(`${packageManager} ${command}`);
+
+  if (!stdOut) {
+    throw new Error(`Could not get version for ${packageManager}`);
+  }
 
   if (stdOut.startsWith('1.')) {
     return '1';
@@ -71,13 +76,24 @@ export const isPackageManagerCacheSupported = packageManager => {
 };
 
 export const getCacheDirectoryPath = async (packageManager: string) => {
-  const fullToolName = await getCmdCommand(packageManager);
-  const toolCommand = toolCacheCommands[fullToolName];
-
+  let packageManagerInfo;
+  if (packageManager === 'npm') {
+    packageManagerInfo = supportedPackageManagers.npm;
+  } else if (packageManager === 'yarn') {
+    const yarnVersion = await getpackageManagerVersion('yarn', '--version');
+    if (yarnVersion.startsWith('1.')) {
+      packageManagerInfo = supportedPackageManagers.yarn1;
+    } else {
+      packageManagerInfo = supportedPackageManagers.yarn2;
+    }
+  }
   const stdOut = await getCommandOutput(
-    toolCommand,
-    `Could not get version for ${packageManager}`
+    packageManagerInfo.getCacheFolderCommand
   );
+
+  if (!stdOut) {
+    throw new Error(`Could not get version for ${packageManager}`);
+  }
 
   return stdOut;
 };
