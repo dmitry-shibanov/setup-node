@@ -15,13 +15,17 @@ import {
 export const restoreCache = async (packageManager: string) => {
   const packageManagerInfo = await getPackageManagerInfo(packageManager);
   if (!packageManagerInfo) {
-    throw new Error(`Caching for '${packageManager}'is not supported`);
+    throw new Error(`Caching for '${packageManager}' is not supported`);
   }
   const platform = process.env.RUNNER_OS;
-  const cachePath = await getCacheDirectoryPath(packageManagerInfo);
 
+  const cachePath = await getCacheDirectoryPath(
+    packageManagerInfo,
+    packageManager
+  );
   const lockFilePath = findLockFile(packageManagerInfo);
   const fileHash = await hashFile(lockFilePath);
+
   const primaryKey = `${platform}-${packageManager}-${fileHash}`;
   core.saveState(State.CachePrimaryKey, primaryKey);
 
@@ -46,7 +50,7 @@ const findLockFile = (supportedPackageManager: PackageInfo) => {
   const fullLockFile = rootContent.find(item => lockFiles.includes(item));
   if (!fullLockFile) {
     throw new Error(
-      `package lock file is not found in ${workspace}. Supported file patterns: ${lockFiles.toString()}`
+      `Dependencies lock file is not found in ${workspace}. Supported file patterns: ${lockFiles.toString()}`
     );
   }
 

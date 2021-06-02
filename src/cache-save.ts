@@ -15,11 +15,16 @@ async function run() {
 const cachePackages = async (packageManager: string) => {
   const state = core.getState(State.CacheMatchedKey);
   const primaryKey = core.getState(State.CachePrimaryKey);
+
   const packageManagerInfo = await getPackageManagerInfo(packageManager);
   if (!packageManagerInfo) {
-    throw new Error(`Caching for '${packageManager}'is not supported`);
+    throw new Error(`Caching for '${packageManager}' is not supported`);
   }
-  const cachePath = await getCacheDirectoryPath(packageManagerInfo);
+
+  const cachePath = await getCacheDirectoryPath(
+    packageManagerInfo,
+    packageManager
+  );
   if (primaryKey === state) {
     core.info(
       `Cache hit occurred on the primary key ${primaryKey}, not saving cache.`

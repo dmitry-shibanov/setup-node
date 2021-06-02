@@ -7,7 +7,7 @@ import * as stream from 'stream';
 import * as util from 'util';
 import * as path from 'path';
 
-type SupportedPackageManagers = {
+type SupportedPackageManager = {
   [prop: string]: PackageInfo;
 };
 
@@ -16,7 +16,7 @@ export interface PackageInfo {
   getCacheFolderCommand: string;
 }
 
-export const supportedPackageManagers: SupportedPackageManagers = {
+export const supportedPackageManagers: SupportedPackageManager = {
   npm: {
     lockFilePatterns: ['package-lock.json', 'yarn.lock'],
     getCacheFolderCommand: 'npm config get cache'
@@ -56,7 +56,7 @@ const getpackageManagerVersion = async (
   const stdOut = await getCommandOutput(`${packageManager} ${command}`);
 
   if (!stdOut) {
-    throw new Error(`Could not get version for ${packageManager}`);
+    throw new Error(`Could not retrieve version of ${packageManager}`);
   }
 
   if (stdOut.startsWith('1.')) {
@@ -68,32 +68,27 @@ const getpackageManagerVersion = async (
 
 export const getPackageManagerInfo = async (packageManager: string) => {
   let packageManagerInfo: PackageInfo;
-  const arr = Array.of<string>(...Object.values(LockType));
-  if (arr.includes(packageManager)) {
-    return null;
-  }
-
   if (packageManager === 'npm') {
-    packageManagerInfo = supportedPackageManagers.npm;
-  } else {
+    return supportedPackageManagers.npm;
+  } else if (packageManager === 'yarn') {
     const yarnVersion = await getpackageManagerVersion('yarn', '--version');
     if (yarnVersion.startsWith('1.')) {
-      packageManagerInfo = supportedPackageManagers.yarn1;
+      return supportedPackageManagers.yarn1;
     } else {
-      packageManagerInfo = supportedPackageManagers.yarn2;
+      return supportedPackageManagers.yarn2;
     }
+  } else {
+    return null;
   }
-
-  return packageManagerInfo;
 };
 
 export const getCacheDirectoryPath = async (
-  packageManagerInfo: PackageInfo
+  packageManagerInfo: PackageInfo,
+  packageManager: string
 ) => {
   const stdOut = await getCommandOutput(
     packageManagerInfo.getCacheFolderCommand
   );
-  const packageManager = Object.keys(packageManagerInfo)[0];
 
   if (!stdOut) {
     throw new Error(`Could not get cache folder path for ${packageManager}`);

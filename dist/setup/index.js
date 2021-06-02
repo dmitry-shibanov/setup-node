@@ -43404,10 +43404,10 @@ const cache_utils_1 = __webpack_require__(452);
 exports.restoreCache = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
     const packageManagerInfo = yield cache_utils_1.getPackageManagerInfo(packageManager);
     if (!packageManagerInfo) {
-        throw new Error(`Caching for '${packageManager}'is not supported`);
+        throw new Error(`Caching for '${packageManager}' is not supported`);
     }
     const platform = process.env.RUNNER_OS;
-    const cachePath = yield cache_utils_1.getCacheDirectoryPath(packageManagerInfo);
+    const cachePath = yield cache_utils_1.getCacheDirectoryPath(packageManagerInfo, packageManager);
     const lockFilePath = findLockFile(packageManagerInfo);
     const fileHash = yield cache_utils_1.hashFile(lockFilePath);
     const primaryKey = `${platform}-${packageManager}-${fileHash}`;
@@ -43428,7 +43428,7 @@ const findLockFile = (supportedPackageManager) => {
     const rootContent = fs_1.default.readdirSync(workspace);
     const fullLockFile = rootContent.find(item => lockFiles.includes(item));
     if (!fullLockFile) {
-        throw new Error(`package lock file is not found in ${workspace}. Supported file patterns: ${lockFiles.toString()}`);
+        throw new Error(`Dependencies lock file is not found in ${workspace}. Supported file patterns: ${lockFiles.toString()}`);
     }
     return path_1.default.resolve(fullLockFile);
 };
@@ -44674,7 +44674,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const exec = __importStar(__webpack_require__(986));
-const constants_1 = __webpack_require__(196);
 const glob = __importStar(__webpack_require__(281));
 const crypto = __importStar(__webpack_require__(417));
 const fs = __importStar(__webpack_require__(747));
@@ -44712,7 +44711,7 @@ const getCommandOutput = (toolCommand) => __awaiter(void 0, void 0, void 0, func
 const getpackageManagerVersion = (packageManager, command) => __awaiter(void 0, void 0, void 0, function* () {
     const stdOut = yield getCommandOutput(`${packageManager} ${command}`);
     if (!stdOut) {
-        throw new Error(`Could not get version for ${packageManager}`);
+        throw new Error(`Could not retrieve version of ${packageManager}`);
     }
     if (stdOut.startsWith('1.')) {
         return '1';
@@ -44721,27 +44720,24 @@ const getpackageManagerVersion = (packageManager, command) => __awaiter(void 0, 
 });
 exports.getPackageManagerInfo = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
     let packageManagerInfo;
-    const arr = Array.of(...Object.values(constants_1.LockType));
-    if (arr.includes(packageManager)) {
-        return null;
-    }
     if (packageManager === 'npm') {
-        packageManagerInfo = exports.supportedPackageManagers.npm;
+        return exports.supportedPackageManagers.npm;
     }
-    else {
+    else if (packageManager === 'yarn') {
         const yarnVersion = yield getpackageManagerVersion('yarn', '--version');
         if (yarnVersion.startsWith('1.')) {
-            packageManagerInfo = exports.supportedPackageManagers.yarn1;
+            return exports.supportedPackageManagers.yarn1;
         }
         else {
-            packageManagerInfo = exports.supportedPackageManagers.yarn2;
+            return exports.supportedPackageManagers.yarn2;
         }
     }
-    return packageManagerInfo;
+    else {
+        return null;
+    }
 });
-exports.getCacheDirectoryPath = (packageManagerInfo) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getCacheDirectoryPath = (packageManagerInfo, packageManager) => __awaiter(void 0, void 0, void 0, function* () {
     const stdOut = yield getCommandOutput(packageManagerInfo.getCacheFolderCommand);
-    const packageManager = Object.keys(packageManagerInfo)[0];
     if (!stdOut) {
         throw new Error(`Could not get cache folder path for ${packageManager}`);
     }
