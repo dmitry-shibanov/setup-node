@@ -8,6 +8,7 @@ import {
   getCacheDirectoryPath,
   hashFile,
   isPackageManagerCacheSupported,
+  SupportedPackageInfo,
   supportedPackageManagers
 } from './cache-utils';
 
@@ -16,13 +17,15 @@ export const restoreCache = async (packageManager: string) => {
     throw new Error(`Caching for '${packageManager}'is not supported`);
   }
   const platform = process.env.RUNNER_OS;
-  const lockFilePath = findLockFile(packageManager);
+  const {cachePath, supportedPackageManager} = await getCacheDirectoryPath(
+    packageManager
+  );
 
+  const lockFilePath = findLockFile(supportedPackageManager);
   const fileHash = await hashFile(lockFilePath);
   const primaryKey = `${platform}-${packageManager}-${fileHash}`;
   core.saveState(State.CachePrimaryKey, primaryKey);
 
-  const cachePath = await getCacheDirectoryPath(packageManager);
   const cacheKey = await cache.restoreCache([cachePath], primaryKey);
 
   if (!cacheKey) {
@@ -36,20 +39,15 @@ export const restoreCache = async (packageManager: string) => {
   core.info(`Cache restored from key: ${cacheKey}`);
 };
 
-const findLockFile = (packageManager: string) => {
-  let lockFiles;
-  if (packageManager === 'npm') {
-    lockFiles = supportedPackageManagers.npm.lockFilePatterns;
-  } else {
-    lockFiles = supportedPackageManagers.yarn1.lockFilePatterns;
-  }
+const findLockFile = (supportedPackageManager: SupportedPackageInfo) => {
+  let lockFiles = supportedPackageManager.lockFilePatterns;
   const workspace = process.env.GITHUB_WORKSPACE!;
   const rootContent = fs.readdirSync(workspace);
 
   const fullLockFile = rootContent.find(item => lockFiles.includes(item));
   if (!fullLockFile) {
     throw new Error(
-      `No package-lock.json or yarn.lock were found in ${workspace}`
+      `package lock file is not found in ${workspace}. Supported file patterns: ${lockFiles.toString()}`
     );
   }
 

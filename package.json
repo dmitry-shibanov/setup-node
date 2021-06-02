@@ -5,7 +5,7 @@
   "description": "setup node action",
   "main": "lib/setup-node.js",
   "scripts": {
-    "build": "tsc && ncc build -o dist/setup src/setup-node.ts && ncc build -o dist/save-cache src/cache-save.ts",
+    "build": "tsc && ncc build -o dist/setup src/setup-node.ts && ncc build -o dist/cache-save src/cache-save.ts",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
     "test": "jest",

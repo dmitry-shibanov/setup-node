@@ -43406,11 +43406,11 @@ exports.restoreCache = (packageManager) => __awaiter(void 0, void 0, void 0, fun
         throw new Error(`Caching for '${packageManager}'is not supported`);
     }
     const platform = process.env.RUNNER_OS;
-    const lockFilePath = findLockFile(packageManager);
+    const { cachePath, supportedPackageManager } = yield cache_utils_1.getCacheDirectoryPath(packageManager);
+    const lockFilePath = findLockFile(supportedPackageManager);
     const fileHash = yield cache_utils_1.hashFile(lockFilePath);
     const primaryKey = `${platform}-${packageManager}-${fileHash}`;
     core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
-    const cachePath = yield cache_utils_1.getCacheDirectoryPath(packageManager);
     const cacheKey = yield cache.restoreCache([cachePath], primaryKey);
     if (!cacheKey) {
         core.info(`${packageManager} cache is not found`);
@@ -43421,19 +43421,13 @@ exports.restoreCache = (packageManager) => __awaiter(void 0, void 0, void 0, fun
     core.setOutput(constants_1.Outputs.CacheHit, isExactMatch);
     core.info(`Cache restored from key: ${cacheKey}`);
 });
-const findLockFile = (packageManager) => {
-    let lockFiles;
-    if (packageManager === 'npm') {
-        lockFiles = cache_utils_1.supportedPackageManagers.npm.lockFilePatterns;
-    }
-    else {
-        lockFiles = cache_utils_1.supportedPackageManagers.yarn1.lockFilePatterns;
-    }
+const findLockFile = (supportedPackageManager) => {
+    let lockFiles = supportedPackageManager.lockFilePatterns;
     const workspace = process.env.GITHUB_WORKSPACE;
     const rootContent = fs_1.default.readdirSync(workspace);
     const fullLockFile = rootContent.find(item => lockFiles.includes(item));
     if (!fullLockFile) {
-        throw new Error(`No package-lock.json or yarn.lock were found in ${workspace}`);
+        throw new Error(`package lock file is not found in ${workspace}. Supported file patterns: ${lockFiles.toString()}`);
     }
     return path_1.default.resolve(fullLockFile);
 };
@@ -44724,14 +44718,6 @@ const getpackageManagerVersion = (packageManager, command) => __awaiter(void 0, 
     }
     return '2';
 });
-const getCmdCommand = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
-    let cmdCommand = packageManager;
-    if (packageManager === 'yarn') {
-        const toolVersion = yield getpackageManagerVersion(packageManager, '--version');
-        cmdCommand = `${packageManager}${toolVersion}`;
-    }
-    return cmdCommand;
-});
 exports.isPackageManagerCacheSupported = packageManager => {
     const arr = Array.of(...Object.values(constants_1.LockType));
     return arr.includes(packageManager);
@@ -44752,9 +44738,9 @@ exports.getCacheDirectoryPath = (packageManager) => __awaiter(void 0, void 0, vo
     }
     const stdOut = yield getCommandOutput(packageManagerInfo.getCacheFolderCommand);
     if (!stdOut) {
-        throw new Error(`Could not get version for ${packageManager}`);
+        throw new Error(`Could not get cache folder path for ${packageManager}`);
     }
-    return stdOut;
+    return { supportedPackageManager: packageManagerInfo, cachePath: stdOut };
 });
 // https://github.com/actions/runner/blob/master/src/Misc/expressionFunc/hashFiles/src/hashFiles.ts
 // replace it, when the issue will be resolved: https://github.com/actions/toolkit/issues/472

@@ -39312,14 +39312,6 @@ const getpackageManagerVersion = (packageManager, command) => __awaiter(void 0, 
     }
     return '2';
 });
-const getCmdCommand = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
-    let cmdCommand = packageManager;
-    if (packageManager === 'yarn') {
-        const toolVersion = yield getpackageManagerVersion(packageManager, '--version');
-        cmdCommand = `${packageManager}${toolVersion}`;
-    }
-    return cmdCommand;
-});
 exports.isPackageManagerCacheSupported = packageManager => {
     const arr = Array.of(...Object.values(constants_1.LockType));
     return arr.includes(packageManager);
@@ -39340,9 +39332,9 @@ exports.getCacheDirectoryPath = (packageManager) => __awaiter(void 0, void 0, vo
     }
     const stdOut = yield getCommandOutput(packageManagerInfo.getCacheFolderCommand);
     if (!stdOut) {
-        throw new Error(`Could not get version for ${packageManager}`);
+        throw new Error(`Could not get cache folder path for ${packageManager}`);
     }
-    return stdOut;
+    return { supportedPackageManager: packageManagerInfo, cachePath: stdOut };
 });
 // https://github.com/actions/runner/blob/master/src/Misc/expressionFunc/hashFiles/src/hashFiles.ts
 // replace it, when the issue will be resolved: https://github.com/actions/toolkit/issues/472
@@ -50354,7 +50346,7 @@ function run() {
 const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
     const state = core.getState(constants_1.State.CacheMatchedKey);
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
-    const cachePath = yield cache_utils_1.getCacheDirectoryPath(packageManager);
+    const { cachePath } = yield cache_utils_1.getCacheDirectoryPath(packageManager);
     if (primaryKey === state) {
         core.info(`Cache hit occurred on the primary key ${primaryKey}, not saving cache.`);
         return;

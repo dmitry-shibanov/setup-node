@@ -16,7 +16,7 @@ const cachePackages = async (packageManager: string) => {
   const state = core.getState(State.CacheMatchedKey);
   const primaryKey = core.getState(State.CachePrimaryKey);
 
-  const cachePath = await getCacheDirectoryPath(packageManager);
+  const {cachePath} = await getCacheDirectoryPath(packageManager);
   if (primaryKey === state) {
     core.info(
       `Cache hit occurred on the primary key ${primaryKey}, not saving cache.`

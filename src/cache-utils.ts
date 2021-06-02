@@ -7,7 +7,16 @@ import * as stream from 'stream';
 import * as util from 'util';
 import * as path from 'path';
 
-export const supportedPackageManagers = {
+type SupportedPackageManagers = {
+  [prop: string]: SupportedPackageInfo;
+};
+
+export interface SupportedPackageInfo {
+  lockFilePatterns: Array<string>;
+  getCacheFolderCommand: string;
+}
+
+export const supportedPackageManagers: SupportedPackageManagers = {
   npm: {
     lockFilePatterns: ['package-lock.json', 'yarn.lock'],
     getCacheFolderCommand: 'npm config get cache'
@@ -57,19 +66,6 @@ const getpackageManagerVersion = async (
   return '2';
 };
 
-const getCmdCommand = async (packageManager: string) => {
-  let cmdCommand = packageManager;
-  if (packageManager === 'yarn') {
-    const toolVersion = await getpackageManagerVersion(
-      packageManager,
-      '--version'
-    );
-    cmdCommand = `${packageManager}${toolVersion}`;
-  }
-
-  return cmdCommand;
-};
-
 export const isPackageManagerCacheSupported = packageManager => {
   const arr = Array.of<string>(...Object.values(LockType));
   return arr.includes(packageManager);
@@ -92,10 +88,10 @@ export const getCacheDirectoryPath = async (packageManager: string) => {
   );
 
   if (!stdOut) {
-    throw new Error(`Could not get version for ${packageManager}`);
+    throw new Error(`Could not get cache folder path for ${packageManager}`);
   }
 
-  return stdOut;
+  return {supportedPackageManager: packageManagerInfo, cachePath: stdOut};
 };
 
 // https://github.com/actions/runner/blob/master/src/Misc/expressionFunc/hashFiles/src/hashFiles.ts
