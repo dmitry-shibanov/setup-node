@@ -8,8 +8,7 @@ import {
   getCacheDirectoryPath,
   hashFile,
   getPackageManagerInfo,
-  PackageInfo,
-  supportedPackageManagers
+  PackageInfo
 } from './cache-utils';
 
 export const restoreCache = async (packageManager: string) => {

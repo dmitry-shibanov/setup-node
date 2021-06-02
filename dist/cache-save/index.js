@@ -39306,10 +39306,7 @@ const getpackageManagerVersion = (packageManager, command) => __awaiter(void 0, 
     if (!stdOut) {
         throw new Error(`Could not retrieve version of ${packageManager}`);
     }
-    if (stdOut.startsWith('1.')) {
-        return '1';
-    }
-    return '2';
+    return stdOut;
 });
 exports.getPackageManagerInfo = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
     let packageManagerInfo;

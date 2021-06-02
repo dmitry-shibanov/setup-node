@@ -59,11 +59,7 @@ const getpackageManagerVersion = async (
     throw new Error(`Could not retrieve version of ${packageManager}`);
   }
 
-  if (stdOut.startsWith('1.')) {
-    return '1';
-  }
-
-  return '2';
+  return stdOut;
 };
 
 export const getPackageManagerInfo = async (packageManager: string) => {
