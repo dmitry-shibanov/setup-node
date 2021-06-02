@@ -8,10 +8,10 @@ import * as util from 'util';
 import * as path from 'path';
 
 type SupportedPackageManagers = {
-  [prop: string]: SupportedPackageInfo;
+  [prop: string]: PackageInfo;
 };
 
-export interface SupportedPackageInfo {
+export interface PackageInfo {
   lockFilePatterns: Array<string>;
   getCacheFolderCommand: string;
 }
@@ -66,16 +66,16 @@ const getpackageManagerVersion = async (
   return '2';
 };
 
-export const isPackageManagerCacheSupported = packageManager => {
+export const getPackageManagerInfo = async (packageManager: string) => {
+  let packageManagerInfo: PackageInfo;
   const arr = Array.of<string>(...Object.values(LockType));
-  return arr.includes(packageManager);
-};
+  if (arr.includes(packageManager)) {
+    return null;
+  }
 
-export const getCacheDirectoryPath = async (packageManager: string) => {
-  let packageManagerInfo;
   if (packageManager === 'npm') {
     packageManagerInfo = supportedPackageManagers.npm;
-  } else if (packageManager === 'yarn') {
+  } else {
     const yarnVersion = await getpackageManagerVersion('yarn', '--version');
     if (yarnVersion.startsWith('1.')) {
       packageManagerInfo = supportedPackageManagers.yarn1;
@@ -83,15 +83,23 @@ export const getCacheDirectoryPath = async (packageManager: string) => {
       packageManagerInfo = supportedPackageManagers.yarn2;
     }
   }
+
+  return packageManagerInfo;
+};
+
+export const getCacheDirectoryPath = async (
+  packageManagerInfo: PackageInfo
+) => {
   const stdOut = await getCommandOutput(
     packageManagerInfo.getCacheFolderCommand
   );
+  const packageManager = Object.keys(packageManagerInfo)[0];
 
   if (!stdOut) {
     throw new Error(`Could not get cache folder path for ${packageManager}`);
   }
 
-  return {supportedPackageManager: packageManagerInfo, cachePath: stdOut};
+  return stdOut;
 };
 
 // https://github.com/actions/runner/blob/master/src/Misc/expressionFunc/hashFiles/src/hashFiles.ts

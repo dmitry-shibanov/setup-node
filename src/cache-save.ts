@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as cache from '@actions/cache';
 import {State} from './constants';
-import {getCacheDirectoryPath} from './cache-utils';
+import {getCacheDirectoryPath, getPackageManagerInfo} from './cache-utils';
 
 async function run() {
   const cacheLock = core.getInput('cache');
@@ -15,8 +15,11 @@ async function run() {
 const cachePackages = async (packageManager: string) => {
   const state = core.getState(State.CacheMatchedKey);
   const primaryKey = core.getState(State.CachePrimaryKey);
-
-  const {cachePath} = await getCacheDirectoryPath(packageManager);
+  const packageManagerInfo = await getPackageManagerInfo(packageManager);
+  if (!packageManagerInfo) {
+    throw new Error(`Caching for '${packageManager}'is not supported`);
+  }
+  const cachePath = await getCacheDirectoryPath(packageManagerInfo);
   if (primaryKey === state) {
     core.info(
       `Cache hit occurred on the primary key ${primaryKey}, not saving cache.`

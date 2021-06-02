@@ -7,21 +7,20 @@ import {State, Outputs} from './constants';
 import {
   getCacheDirectoryPath,
   hashFile,
-  isPackageManagerCacheSupported,
-  SupportedPackageInfo,
+  getPackageManagerInfo,
+  PackageInfo,
   supportedPackageManagers
 } from './cache-utils';
 
 export const restoreCache = async (packageManager: string) => {
-  if (!isPackageManagerCacheSupported(packageManager)) {
+  const packageManagerInfo = await getPackageManagerInfo(packageManager);
+  if (!packageManagerInfo) {
     throw new Error(`Caching for '${packageManager}'is not supported`);
   }
   const platform = process.env.RUNNER_OS;
-  const {cachePath, supportedPackageManager} = await getCacheDirectoryPath(
-    packageManager
-  );
+  const cachePath = await getCacheDirectoryPath(packageManagerInfo);
 
-  const lockFilePath = findLockFile(supportedPackageManager);
+  const lockFilePath = findLockFile(packageManagerInfo);
   const fileHash = await hashFile(lockFilePath);
   const primaryKey = `${platform}-${packageManager}-${fileHash}`;
   core.saveState(State.CachePrimaryKey, primaryKey);
@@ -39,7 +38,7 @@ export const restoreCache = async (packageManager: string) => {
   core.info(`Cache restored from key: ${cacheKey}`);
 };
 
-const findLockFile = (supportedPackageManager: SupportedPackageInfo) => {
+const findLockFile = (supportedPackageManager: PackageInfo) => {
   let lockFiles = supportedPackageManager.lockFilePatterns;
   const workspace = process.env.GITHUB_WORKSPACE!;
   const rootContent = fs.readdirSync(workspace);

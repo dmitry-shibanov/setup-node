@@ -43402,12 +43402,13 @@ const fs_1 = __importDefault(__webpack_require__(747));
 const constants_1 = __webpack_require__(196);
 const cache_utils_1 = __webpack_require__(452);
 exports.restoreCache = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!cache_utils_1.isPackageManagerCacheSupported(packageManager)) {
+    const packageManagerInfo = yield cache_utils_1.getPackageManagerInfo(packageManager);
+    if (!packageManagerInfo) {
         throw new Error(`Caching for '${packageManager}'is not supported`);
     }
     const platform = process.env.RUNNER_OS;
-    const { cachePath, supportedPackageManager } = yield cache_utils_1.getCacheDirectoryPath(packageManager);
-    const lockFilePath = findLockFile(supportedPackageManager);
+    const cachePath = yield cache_utils_1.getCacheDirectoryPath(packageManagerInfo);
+    const lockFilePath = findLockFile(packageManagerInfo);
     const fileHash = yield cache_utils_1.hashFile(lockFilePath);
     const primaryKey = `${platform}-${packageManager}-${fileHash}`;
     core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
@@ -44718,16 +44719,16 @@ const getpackageManagerVersion = (packageManager, command) => __awaiter(void 0, 
     }
     return '2';
 });
-exports.isPackageManagerCacheSupported = packageManager => {
-    const arr = Array.of(...Object.values(constants_1.LockType));
-    return arr.includes(packageManager);
-};
-exports.getCacheDirectoryPath = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getPackageManagerInfo = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
     let packageManagerInfo;
+    const arr = Array.of(...Object.values(constants_1.LockType));
+    if (arr.includes(packageManager)) {
+        return null;
+    }
     if (packageManager === 'npm') {
         packageManagerInfo = exports.supportedPackageManagers.npm;
     }
-    else if (packageManager === 'yarn') {
+    else {
         const yarnVersion = yield getpackageManagerVersion('yarn', '--version');
         if (yarnVersion.startsWith('1.')) {
             packageManagerInfo = exports.supportedPackageManagers.yarn1;
@@ -44736,11 +44737,15 @@ exports.getCacheDirectoryPath = (packageManager) => __awaiter(void 0, void 0, vo
             packageManagerInfo = exports.supportedPackageManagers.yarn2;
         }
     }
+    return packageManagerInfo;
+});
+exports.getCacheDirectoryPath = (packageManagerInfo) => __awaiter(void 0, void 0, void 0, function* () {
     const stdOut = yield getCommandOutput(packageManagerInfo.getCacheFolderCommand);
+    const packageManager = Object.keys(packageManagerInfo)[0];
     if (!stdOut) {
         throw new Error(`Could not get cache folder path for ${packageManager}`);
     }
-    return { supportedPackageManager: packageManagerInfo, cachePath: stdOut };
+    return stdOut;
 });
 // https://github.com/actions/runner/blob/master/src/Misc/expressionFunc/hashFiles/src/hashFiles.ts
 // replace it, when the issue will be resolved: https://github.com/actions/toolkit/issues/472

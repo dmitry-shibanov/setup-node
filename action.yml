@@ -30,5 +30,5 @@ inputs:
 runs:
   using: 'node12'
   main: 'dist/setup/index.js'
-  post: 'dist/save-cache/index.js'
+  post: 'dist/cache-save/index.js'
   post-if: success()
