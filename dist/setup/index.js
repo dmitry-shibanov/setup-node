@@ -7543,12 +7543,10 @@ function run() {
                 auth.configAuthentication(registryUrl, alwaysAuth);
             }
             if (cache) {
-                if (!isGhes()) {
-                    yield cache_restore_1.restoreCache(cache);
-                }
-                else {
+                if (isGhes()) {
                     throw new Error('Caching is not supported on GHES');
                 }
+                yield cache_restore_1.restoreCache(cache);
             }
             const matchersPath = path.join(__dirname, '../..', '.github');
             core.info(`##[add-matcher]${path.join(matchersPath, 'tsc.json')}`);
@@ -44673,13 +44671,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const exec = __importStar(__webpack_require__(986));
-const glob = __importStar(__webpack_require__(281));
 const crypto = __importStar(__webpack_require__(417));
 const fs = __importStar(__webpack_require__(747));
 const stream = __importStar(__webpack_require__(794));
 const util = __importStar(__webpack_require__(669));
 const path = __importStar(__webpack_require__(622));
+const exec = __importStar(__webpack_require__(986));
+const glob = __importStar(__webpack_require__(281));
 exports.supportedPackageManagers = {
     npm: {
         lockFilePatterns: ['package-lock.json', 'yarn.lock'],
@@ -44708,7 +44706,7 @@ const getCommandOutput = (toolCommand) => __awaiter(void 0, void 0, void 0, func
     }
     return stdOut;
 });
-const getpackageManagerVersion = (packageManager, command) => __awaiter(void 0, void 0, void 0, function* () {
+const getPackageManagerVersion = (packageManager, command) => __awaiter(void 0, void 0, void 0, function* () {
     const stdOut = yield getCommandOutput(`${packageManager} ${command}`);
     if (!stdOut) {
         throw new Error(`Could not retrieve version of ${packageManager}`);
@@ -44721,7 +44719,7 @@ exports.getPackageManagerInfo = (packageManager) => __awaiter(void 0, void 0, vo
         return exports.supportedPackageManagers.npm;
     }
     else if (packageManager === 'yarn') {
-        const yarnVersion = yield getpackageManagerVersion('yarn', '--version');
+        const yarnVersion = yield getPackageManagerVersion('yarn', '--version');
         if (yarnVersion.startsWith('1.')) {
             return exports.supportedPackageManagers.yarn1;
         }

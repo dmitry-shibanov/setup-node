@@ -35,7 +35,7 @@ const cachePackages = async (packageManager: string) => {
 
   try {
     await cache.saveCache([cachePath], primaryKey);
-    core.info(`Cache saved with key: ${primaryKey}`);
+    core.info(`Cache saved with the key: ${primaryKey}`);
   } catch (error) {
     if (error.name === cache.ValidationError.name) {
       throw error;

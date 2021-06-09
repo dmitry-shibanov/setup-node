@@ -1,11 +1,11 @@
-import * as exec from '@actions/exec';
-import {LockType} from './constants';
-import * as glob from '@actions/glob';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as stream from 'stream';
 import * as util from 'util';
 import * as path from 'path';
+
+import * as exec from '@actions/exec';
+import * as glob from '@actions/glob';
 
 type SupportedPackageManagers = {
   [prop: string]: PackageManagerInfo;
@@ -49,7 +49,7 @@ const getCommandOutput = async (toolCommand: string) => {
   return stdOut;
 };
 
-const getpackageManagerVersion = async (
+const getPackageManagerVersion = async (
   packageManager: string,
   command: string
 ) => {
@@ -67,7 +67,7 @@ export const getPackageManagerInfo = async (packageManager: string) => {
   if (packageManager === 'npm') {
     return supportedPackageManagers.npm;
   } else if (packageManager === 'yarn') {
-    const yarnVersion = await getpackageManagerVersion('yarn', '--version');
+    const yarnVersion = await getPackageManagerVersion('yarn', '--version');
     if (yarnVersion.startsWith('1.')) {
       return supportedPackageManagers.yarn1;
     } else {
