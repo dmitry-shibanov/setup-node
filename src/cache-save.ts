@@ -3,7 +3,7 @@ import * as cache from '@actions/cache';
 import {State} from './constants';
 import {getCacheDirectoryPath, getPackageManagerInfo} from './cache-utils';
 
-async function run() {
+export async function run() {
   const cacheLock = core.getInput('cache');
   try {
     await cachePackages(cacheLock);
