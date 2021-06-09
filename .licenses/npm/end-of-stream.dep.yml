@@ -1,6 +1,6 @@
 ---
 name: end-of-stream
-version: 1.4.1
+version: 1.4.4
 type: npm
 summary: Call a callback when a readable/writable/duplex stream has completed or failed.
 homepage: https://github.com/mafintosh/end-of-stream
