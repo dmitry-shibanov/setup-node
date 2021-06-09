@@ -1,5 +1,5 @@
-import * as exec from '@actions/exec';
 import * as core from '@actions/core';
+import * as exec from '@actions/exec';
 
 type SupportedPackageManagers = {
   [prop: string]: PackageManagerInfo;
@@ -35,7 +35,7 @@ export const getCommandOutput = async (toolCommand: string) => {
   return stdout;
 };
 
-const getpackageManagerVersion = async (
+const getPackageManagerVersion = async (
   packageManager: string,
   command: string
 ) => {
@@ -52,7 +52,7 @@ export const getPackageManagerInfo = async (packageManager: string) => {
   if (packageManager === 'npm') {
     return supportedPackageManagers.npm;
   } else if (packageManager === 'yarn') {
-    const yarnVersion = await getpackageManagerVersion('yarn', '--version');
+    const yarnVersion = await getPackageManagerVersion('yarn', '--version');
 
     core.debug(`Consumed yarn version is ${yarnVersion}`);
 
