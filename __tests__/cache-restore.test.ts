@@ -100,50 +100,62 @@ describe('cache-restore', () => {
       }
     });
   });
-  it.each([['npm7'], ['npm7'], ['yarn1'], ['yarn2'], ['random']])(
-    'it will throw an error because %s is not supported',
-    async packageManager => {
-      await expect(restoreCache(packageManager)).rejects.toThrowError(
-        `Caching for '${packageManager}' is not supported`
-      );
-    }
-  );
 
-  it.each([
-    ['yarn', '2.1.2', yarnFileHash],
-    ['yarn', '1.2.3', yarnFileHash],
-    ['npm', '', npmFileHash]
-  ])(
-    'restored packages for %s',
-    async (packageManager, toolVersion, fileHash) => {
-      if (toolVersion) {
-        packageManagerVersion = toolVersion;
+  describe('Validate provided package manager', () => {
+    it.each([['npm7'], ['npm7'], ['yarn1'], ['yarn2'], ['random']])(
+      'Throw an error because %s is not supported',
+      async packageManager => {
+        await expect(restoreCache(packageManager)).rejects.toThrowError(
+          `Caching for '${packageManager}' is not supported`
+        );
       }
+    );
+  });
 
-      await restoreCache(packageManager);
-      expect(infoSpy).toHaveBeenLastCalledWith(
-        `Cache restored from key: ${platform}-${packageManager}-${fileHash}`
-      );
-    }
-  );
+  describe('Restore dependencies', () => {
+    it.each([
+      ['yarn', '2.1.2', yarnFileHash],
+      ['yarn', '1.2.3', yarnFileHash],
+      ['npm', '', npmFileHash]
+    ])(
+      'restored dependencies for %s',
+      async (packageManager, toolVersion, fileHash) => {
+        if (toolVersion) {
+          packageManagerVersion = toolVersion;
+        }
 
-  it.each([
-    ['yarn', '2.1.2', yarnFileHash],
-    ['yarn', '1.2.3', yarnFileHash],
-    ['npm', '', npmFileHash]
-  ])(
-    'restored packages for %s',
-    async (packageManager, toolVersion, fileHash) => {
-      if (toolVersion) {
-        packageManagerVersion = toolVersion;
+        await restoreCache(packageManager);
+        expect(hashFilesSpy).toHaveBeenCalled();
+        expect(infoSpy).toHaveBeenCalledWith(
+          `Cache restored from key: ${platform}-${packageManager}-${fileHash}`
+        );
+        expect(infoSpy).not.toHaveBeenCalledWith(
+          `${packageManager} cache is not found`
+        );
       }
-      restoreCacheSpy.mockImplementationOnce(() => undefined);
-      await restoreCache(packageManager);
-      expect(infoSpy).not.toHaveBeenLastCalledWith(
-        `Cache restored from key: ${platform}-${packageManager}-${fileHash}`
-      );
-    }
-  );
+    );
+  });
+
+  describe('Dependencies changed', () => {
+    it.each([
+      ['yarn', '2.1.2', yarnFileHash],
+      ['yarn', '1.2.3', yarnFileHash],
+      ['npm', '', npmFileHash]
+    ])(
+      'dependencies are changed %s',
+      async (packageManager, toolVersion, fileHash) => {
+        if (toolVersion) {
+          packageManagerVersion = toolVersion;
+        }
+        restoreCacheSpy.mockImplementationOnce(() => undefined);
+        await restoreCache(packageManager);
+        expect(hashFilesSpy).toHaveBeenCalled();
+        expect(infoSpy).toHaveBeenCalledWith(
+          `${packageManager} cache is not found`
+        );
+      }
+    );
+  });
 
   afterEach(() => {
     jest.resetAllMocks();

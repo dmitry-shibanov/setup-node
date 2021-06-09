@@ -54,7 +54,7 @@ export const getPackageManagerInfo = async (packageManager: string) => {
   } else if (packageManager === 'yarn') {
     const yarnVersion = await getpackageManagerVersion('yarn', '--version');
 
-    core.debug(`consumed yarn version is ${yarnVersion}`);
+    core.debug(`Consumed yarn version is ${yarnVersion}`);
 
     if (yarnVersion.startsWith('1.')) {
       return supportedPackageManagers.yarn1;

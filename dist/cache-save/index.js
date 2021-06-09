@@ -38769,7 +38769,7 @@ exports.getPackageManagerInfo = (packageManager) => __awaiter(void 0, void 0, vo
     }
     else if (packageManager === 'yarn') {
         const yarnVersion = yield getpackageManagerVersion('yarn', '--version');
-        core.debug(`consumed yarn version is ${yarnVersion}`);
+        core.debug(`Consumed yarn version is ${yarnVersion}`);
         if (yarnVersion.startsWith('1.')) {
             return exports.supportedPackageManagers.yarn1;
         }

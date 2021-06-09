@@ -65,174 +65,180 @@ describe('cahe-save', () => {
     getCommandOutputSpy = jest.spyOn(utils, 'getCommandOutput');
   });
 
-  it('Package manager is not provided, skip caching', async () => {
-    inputs['cache'] = '';
+  describe('Package manager validation', () => {
+    it('Package manager is not provided, skip caching', async () => {
+      inputs['cache'] = '';
 
-    await run();
+      await run();
 
-    expect(setFailedSpy).not.toHaveBeenCalled();
-    expect(infoSpy).not.toHaveBeenCalled();
-    expect(saveCacheSpy).not.toHaveBeenCalled();
-    expect(debugSpy).toHaveBeenLastCalledWith(
-      "Caching for '' is not supported"
-    );
-  });
-
-  it('Package manager is not valid,  skip caching', async () => {
-    inputs['cache'] = 'yarn3';
-
-    await run();
-
-    expect(setFailedSpy).not.toHaveBeenCalled();
-    expect(infoSpy).not.toHaveBeenCalled();
-    expect(saveCacheSpy).not.toHaveBeenCalled();
-    expect(debugSpy).toHaveBeenLastCalledWith(
-      "Caching for 'yarn3' is not supported"
-    );
-  });
-
-  it('it does not save cache from yarn 1, because nothing changed', async () => {
-    inputs['cache'] = 'yarn';
-    getStateSpy.mockImplementation(() => yarnFileHash);
-    getCommandOutputSpy
-      .mockImplementationOnce(() => '1.2.3')
-      .mockImplementationOnce(() => `${commonPath}/yarn1`);
-
-    await run();
-
-    expect(getInputSpy).toHaveBeenCalled();
-    expect(getStateSpy).toHaveBeenCalledTimes(2);
-    expect(getCommandOutputSpy).toHaveBeenCalledTimes(2);
-    expect(debugSpy).toHaveBeenCalledWith(`yarn path is ${commonPath}/yarn1`);
-    expect(debugSpy).toHaveBeenCalledWith('consumed yarn version is 1.2.3');
-    expect(infoSpy).toHaveBeenCalledWith(
-      `Cache hit occurred on the primary key ${yarnFileHash}, not saving cache.`
-    );
-    expect(setFailedSpy).not.toHaveBeenCalled();
-  });
-
-  it('it does not save cache from yarn 2, because nothing changed', async () => {
-    inputs['cache'] = 'yarn';
-    getStateSpy.mockImplementation(() => yarnFileHash);
-    getCommandOutputSpy
-      .mockImplementationOnce(() => '2.2.3')
-      .mockImplementationOnce(() => `${commonPath}/yarn2`);
-
-    await run();
-
-    expect(getInputSpy).toHaveBeenCalled();
-    expect(getStateSpy).toHaveBeenCalledTimes(2);
-    expect(getCommandOutputSpy).toHaveBeenCalledTimes(2);
-    expect(debugSpy).toHaveBeenCalledWith(`yarn path is ${commonPath}/yarn2`);
-    expect(debugSpy).toHaveBeenCalledWith('consumed yarn version is 2.2.3');
-    expect(infoSpy).toHaveBeenCalledWith(
-      `Cache hit occurred on the primary key ${yarnFileHash}, not saving cache.`
-    );
-    expect(setFailedSpy).not.toHaveBeenCalled();
-  });
-
-  it('it does not save cache from npm, because nothing changed', async () => {
-    inputs['cache'] = 'npm';
-    getStateSpy.mockImplementation(() => npmFileHash);
-    getCommandOutputSpy.mockImplementationOnce(() => `${commonPath}/npm`);
-
-    await run();
-
-    expect(getInputSpy).toHaveBeenCalled();
-    expect(getStateSpy).toHaveBeenCalledTimes(2);
-    expect(getCommandOutputSpy).toHaveBeenCalledTimes(1);
-    expect(debugSpy).toHaveBeenCalledWith(`npm path is ${commonPath}/npm`);
-    expect(infoSpy).toHaveBeenCalledWith(
-      `Cache hit occurred on the primary key ${npmFileHash}, not saving cache.`
-    );
-    expect(setFailedSpy).not.toHaveBeenCalled();
-  });
-
-  it('it saves cache from yarn 1', async () => {
-    inputs['cache'] = 'yarn';
-    getStateSpy.mockImplementation((name: string) => {
-      if (name === State.CacheMatchedKey) {
-        return yarnFileHash;
-      } else {
-        return npmFileHash;
-      }
+      expect(setFailedSpy).not.toHaveBeenCalled();
+      expect(infoSpy).not.toHaveBeenCalled();
+      expect(saveCacheSpy).not.toHaveBeenCalled();
+      expect(debugSpy).toHaveBeenLastCalledWith(
+        "Caching for '' is not supported"
+      );
     });
-    getCommandOutputSpy
-      .mockImplementationOnce(() => '1.2.3')
-      .mockImplementationOnce(() => `${commonPath}/yarn1`);
 
-    await run();
+    it('Package manager is not valid, skip caching', async () => {
+      inputs['cache'] = 'yarn3';
 
-    expect(getInputSpy).toHaveBeenCalled();
-    expect(getStateSpy).toHaveBeenCalledTimes(2);
-    expect(getCommandOutputSpy).toHaveBeenCalledTimes(2);
-    expect(debugSpy).toHaveBeenCalledWith(`yarn path is ${commonPath}/yarn1`);
-    expect(debugSpy).toHaveBeenCalledWith('consumed yarn version is 1.2.3');
-    expect(infoSpy).not.toHaveBeenCalledWith(
-      `Cache hit occurred on the primary key ${yarnFileHash}, not saving cache.`
-    );
-    expect(saveCacheSpy).toHaveBeenCalled();
-    expect(infoSpy).toHaveBeenLastCalledWith(
-      `Cache saved with key: ${npmFileHash}`
-    );
-    expect(setFailedSpy).not.toHaveBeenCalled();
+      await run();
+
+      expect(setFailedSpy).not.toHaveBeenCalled();
+      expect(infoSpy).not.toHaveBeenCalled();
+      expect(saveCacheSpy).not.toHaveBeenCalled();
+      expect(debugSpy).toHaveBeenLastCalledWith(
+        "Caching for 'yarn3' is not supported"
+      );
+    });
   });
 
-  it('it saves cache from yarn 2', async () => {
-    inputs['cache'] = 'yarn';
-    getStateSpy.mockImplementation((name: string) => {
-      if (name === State.CacheMatchedKey) {
-        return yarnFileHash;
-      } else {
-        return npmFileHash;
-      }
+  describe('it does not save cache, because nothing is changed', () => {
+    it('yarn 1', async () => {
+      inputs['cache'] = 'yarn';
+      getStateSpy.mockImplementation(() => yarnFileHash);
+      getCommandOutputSpy
+        .mockImplementationOnce(() => '1.2.3')
+        .mockImplementationOnce(() => `${commonPath}/yarn1`);
+
+      await run();
+
+      expect(getInputSpy).toHaveBeenCalled();
+      expect(getStateSpy).toHaveBeenCalledTimes(2);
+      expect(getCommandOutputSpy).toHaveBeenCalledTimes(2);
+      expect(debugSpy).toHaveBeenCalledWith(`yarn path is ${commonPath}/yarn1`);
+      expect(debugSpy).toHaveBeenCalledWith('Consumed yarn version is 1.2.3');
+      expect(infoSpy).toHaveBeenCalledWith(
+        `Cache hit occurred on the primary key ${yarnFileHash}, not saving cache.`
+      );
+      expect(setFailedSpy).not.toHaveBeenCalled();
     });
-    getCommandOutputSpy
-      .mockImplementationOnce(() => '2.2.3')
-      .mockImplementationOnce(() => `${commonPath}/yarn2`);
 
-    await run();
+    it('yarn 2', async () => {
+      inputs['cache'] = 'yarn';
+      getStateSpy.mockImplementation(() => yarnFileHash);
+      getCommandOutputSpy
+        .mockImplementationOnce(() => '2.2.3')
+        .mockImplementationOnce(() => `${commonPath}/yarn2`);
 
-    expect(getInputSpy).toHaveBeenCalled();
-    expect(getStateSpy).toHaveBeenCalledTimes(2);
-    expect(getCommandOutputSpy).toHaveBeenCalledTimes(2);
-    expect(debugSpy).toHaveBeenCalledWith(`yarn path is ${commonPath}/yarn2`);
-    expect(debugSpy).toHaveBeenCalledWith('consumed yarn version is 2.2.3');
-    expect(infoSpy).not.toHaveBeenCalledWith(
-      `Cache hit occurred on the primary key ${yarnFileHash}, not saving cache.`
-    );
-    expect(saveCacheSpy).toHaveBeenCalled();
-    expect(infoSpy).toHaveBeenLastCalledWith(
-      `Cache saved with key: ${npmFileHash}`
-    );
-    expect(setFailedSpy).not.toHaveBeenCalled();
+      await run();
+
+      expect(getInputSpy).toHaveBeenCalled();
+      expect(getStateSpy).toHaveBeenCalledTimes(2);
+      expect(getCommandOutputSpy).toHaveBeenCalledTimes(2);
+      expect(debugSpy).toHaveBeenCalledWith(`yarn path is ${commonPath}/yarn2`);
+      expect(debugSpy).toHaveBeenCalledWith('Consumed yarn version is 2.2.3');
+      expect(infoSpy).toHaveBeenCalledWith(
+        `Cache hit occurred on the primary key ${yarnFileHash}, not saving cache.`
+      );
+      expect(setFailedSpy).not.toHaveBeenCalled();
+    });
+
+    it('npm', async () => {
+      inputs['cache'] = 'npm';
+      getStateSpy.mockImplementation(() => npmFileHash);
+      getCommandOutputSpy.mockImplementationOnce(() => `${commonPath}/npm`);
+
+      await run();
+
+      expect(getInputSpy).toHaveBeenCalled();
+      expect(getStateSpy).toHaveBeenCalledTimes(2);
+      expect(getCommandOutputSpy).toHaveBeenCalledTimes(1);
+      expect(debugSpy).toHaveBeenCalledWith(`npm path is ${commonPath}/npm`);
+      expect(infoSpy).toHaveBeenCalledWith(
+        `Cache hit occurred on the primary key ${npmFileHash}, not saving cache.`
+      );
+      expect(setFailedSpy).not.toHaveBeenCalled();
+    });
   });
 
-  it('it saves cache from npm', async () => {
-    inputs['cache'] = 'npm';
-    getStateSpy.mockImplementation((name: string) => {
-      if (name === State.CacheMatchedKey) {
-        return npmFileHash;
-      } else {
-        return yarnFileHash;
-      }
+  describe('action saves the cache', () => {
+    it('saves cache from yarn 1', async () => {
+      inputs['cache'] = 'yarn';
+      getStateSpy.mockImplementation((name: string) => {
+        if (name === State.CacheMatchedKey) {
+          return yarnFileHash;
+        } else {
+          return npmFileHash;
+        }
+      });
+      getCommandOutputSpy
+        .mockImplementationOnce(() => '1.2.3')
+        .mockImplementationOnce(() => `${commonPath}/yarn1`);
+
+      await run();
+
+      expect(getInputSpy).toHaveBeenCalled();
+      expect(getStateSpy).toHaveBeenCalledTimes(2);
+      expect(getCommandOutputSpy).toHaveBeenCalledTimes(2);
+      expect(debugSpy).toHaveBeenCalledWith(`yarn path is ${commonPath}/yarn1`);
+      expect(debugSpy).toHaveBeenCalledWith('Consumed yarn version is 1.2.3');
+      expect(infoSpy).not.toHaveBeenCalledWith(
+        `Cache hit occurred on the primary key ${yarnFileHash}, not saving cache.`
+      );
+      expect(saveCacheSpy).toHaveBeenCalled();
+      expect(infoSpy).toHaveBeenLastCalledWith(
+        `Cache saved with key: ${npmFileHash}`
+      );
+      expect(setFailedSpy).not.toHaveBeenCalled();
     });
-    getCommandOutputSpy.mockImplementationOnce(() => `${commonPath}/npm`);
 
-    await run();
+    it('saves cache from yarn 2', async () => {
+      inputs['cache'] = 'yarn';
+      getStateSpy.mockImplementation((name: string) => {
+        if (name === State.CacheMatchedKey) {
+          return yarnFileHash;
+        } else {
+          return npmFileHash;
+        }
+      });
+      getCommandOutputSpy
+        .mockImplementationOnce(() => '2.2.3')
+        .mockImplementationOnce(() => `${commonPath}/yarn2`);
 
-    expect(getInputSpy).toHaveBeenCalled();
-    expect(getStateSpy).toHaveBeenCalledTimes(2);
-    expect(getCommandOutputSpy).toHaveBeenCalledTimes(1);
-    expect(debugSpy).toHaveBeenCalledWith(`npm path is ${commonPath}/npm`);
-    expect(infoSpy).not.toHaveBeenCalledWith(
-      `Cache hit occurred on the primary key ${npmFileHash}, not saving cache.`
-    );
-    expect(saveCacheSpy).toHaveBeenCalled();
-    expect(infoSpy).toHaveBeenLastCalledWith(
-      `Cache saved with key: ${yarnFileHash}`
-    );
-    expect(setFailedSpy).not.toHaveBeenCalled();
+      await run();
+
+      expect(getInputSpy).toHaveBeenCalled();
+      expect(getStateSpy).toHaveBeenCalledTimes(2);
+      expect(getCommandOutputSpy).toHaveBeenCalledTimes(2);
+      expect(debugSpy).toHaveBeenCalledWith(`yarn path is ${commonPath}/yarn2`);
+      expect(debugSpy).toHaveBeenCalledWith('Consumed yarn version is 2.2.3');
+      expect(infoSpy).not.toHaveBeenCalledWith(
+        `Cache hit occurred on the primary key ${yarnFileHash}, not saving cache.`
+      );
+      expect(saveCacheSpy).toHaveBeenCalled();
+      expect(infoSpy).toHaveBeenLastCalledWith(
+        `Cache saved with key: ${npmFileHash}`
+      );
+      expect(setFailedSpy).not.toHaveBeenCalled();
+    });
+
+    it('npm', async () => {
+      inputs['cache'] = 'npm';
+      getStateSpy.mockImplementation((name: string) => {
+        if (name === State.CacheMatchedKey) {
+          return npmFileHash;
+        } else {
+          return yarnFileHash;
+        }
+      });
+      getCommandOutputSpy.mockImplementationOnce(() => `${commonPath}/npm`);
+
+      await run();
+
+      expect(getInputSpy).toHaveBeenCalled();
+      expect(getStateSpy).toHaveBeenCalledTimes(2);
+      expect(getCommandOutputSpy).toHaveBeenCalledTimes(1);
+      expect(debugSpy).toHaveBeenCalledWith(`npm path is ${commonPath}/npm`);
+      expect(infoSpy).not.toHaveBeenCalledWith(
+        `Cache hit occurred on the primary key ${npmFileHash}, not saving cache.`
+      );
+      expect(saveCacheSpy).toHaveBeenCalled();
+      expect(infoSpy).toHaveBeenLastCalledWith(
+        `Cache saved with key: ${yarnFileHash}`
+      );
+      expect(setFailedSpy).not.toHaveBeenCalled();
+    });
   });
 
   afterEach(() => {
