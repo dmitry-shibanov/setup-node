@@ -1,4 +1,4 @@
-name: versions
+name: e2e-cache
 
 on:
   pull_request:
@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Clean global cache
-        run: npm cache clean
+        run: npm cache clean --force
       - name: Setup Node
         uses: ./
         with:
@@ -43,13 +43,15 @@ jobs:
         node-version: [10, 12, 14]
     steps:
       - uses: actions/checkout@v2
+      - name: Yarn version
+        run: yarn --version
       - name: Generate yarn file
         run: yarn install
       - name: Remove dependencies
         shell: pwsh
         run: Remove-Item node_modules -Force -Recurse
       - name: Clean global cache
-        run: yarn cache clean -all
+        run: yarn cache clean
       - name: Setup Node
         uses: ./
         with:
@@ -72,6 +74,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Update yarn
         run: yarn set version berry
+      - name: Yarn version
+        run: yarn --version
       - name: Generate simple .yarnrc.yml
         run: |
           echo "nodeLinker: node-modules" >> .yarnrc.yml
@@ -81,7 +85,7 @@ jobs:
         shell: pwsh
         run: Remove-Item node_modules -Force -Recurse
       - name: Clean global cache
-        run: yarn cache clean -all
+        run: yarn cache clean --all
       - name: Setup Node
         uses: ./
         with:
