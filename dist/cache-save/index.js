@@ -50336,7 +50336,7 @@ function run() {
             yield cachePackages(cacheLock);
         }
         catch (error) {
-            core.setFailed('Failed to remove private key');
+            core.setFailed(error.message);
         }
     });
 }
@@ -50345,7 +50345,8 @@ const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, func
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
     const packageManagerInfo = yield cache_utils_1.getPackageManagerInfo(packageManager);
     if (!packageManagerInfo) {
-        throw new Error(`Caching for '${packageManager}' is not supported`);
+        core.debug(`Caching for '${packageManager}' is not supported`);
+        return;
     }
     const cachePath = yield cache_utils_1.getCacheDirectoryPath(packageManagerInfo, packageManager);
     if (primaryKey === state) {

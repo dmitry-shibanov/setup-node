@@ -8,7 +8,7 @@ async function run() {
   try {
     await cachePackages(cacheLock);
   } catch (error) {
-    core.setFailed('Failed to remove private key');
+    core.setFailed(error.message);
   }
 }
 
@@ -18,7 +18,8 @@ const cachePackages = async (packageManager: string) => {
 
   const packageManagerInfo = await getPackageManagerInfo(packageManager);
   if (!packageManagerInfo) {
-    throw new Error(`Caching for '${packageManager}' is not supported`);
+    core.debug(`Caching for '${packageManager}' is not supported`);
+    return;
   }
 
   const cachePath = await getCacheDirectoryPath(
