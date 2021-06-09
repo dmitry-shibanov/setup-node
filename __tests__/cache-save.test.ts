@@ -178,7 +178,7 @@ describe('cahe-save', () => {
       );
       expect(saveCacheSpy).toHaveBeenCalled();
       expect(infoSpy).toHaveBeenLastCalledWith(
-        `Cache saved with key: ${npmFileHash}`
+        `Cache saved with the key: ${npmFileHash}`
       );
       expect(setFailedSpy).not.toHaveBeenCalled();
     });
@@ -208,7 +208,7 @@ describe('cahe-save', () => {
       );
       expect(saveCacheSpy).toHaveBeenCalled();
       expect(infoSpy).toHaveBeenLastCalledWith(
-        `Cache saved with key: ${npmFileHash}`
+        `Cache saved with the key: ${npmFileHash}`
       );
       expect(setFailedSpy).not.toHaveBeenCalled();
     });
@@ -235,7 +235,7 @@ describe('cahe-save', () => {
       );
       expect(saveCacheSpy).toHaveBeenCalled();
       expect(infoSpy).toHaveBeenLastCalledWith(
-        `Cache saved with key: ${yarnFileHash}`
+        `Cache saved with the key: ${yarnFileHash}`
       );
       expect(setFailedSpy).not.toHaveBeenCalled();
     });
