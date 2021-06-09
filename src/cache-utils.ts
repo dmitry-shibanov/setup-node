@@ -1,16 +1,16 @@
 import * as exec from '@actions/exec';
 import * as core from '@actions/core';
 
-type SupportedPackageManager = {
-  [prop: string]: PackageInfo;
+type SupportedPackageManagers = {
+  [prop: string]: PackageManagerInfo;
 };
 
-export interface PackageInfo {
+export interface PackageManagerInfo {
   lockFilePatterns: Array<string>;
   getCacheFolderCommand: string;
 }
 
-export const supportedPackageManagers: SupportedPackageManager = {
+export const supportedPackageManagers: SupportedPackageManagers = {
   npm: {
     lockFilePatterns: ['package-lock.json', 'yarn.lock'],
     getCacheFolderCommand: 'npm config get cache'
@@ -67,7 +67,7 @@ export const getPackageManagerInfo = async (packageManager: string) => {
 };
 
 export const getCacheDirectoryPath = async (
-  packageManagerInfo: PackageInfo,
+  packageManagerInfo: PackageManagerInfo,
   packageManager: string
 ) => {
   const stdOut = await getCommandOutput(
