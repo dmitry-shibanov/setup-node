@@ -7,16 +7,16 @@ import * as stream from 'stream';
 import * as util from 'util';
 import * as path from 'path';
 
-type SupportedPackageManager = {
-  [prop: string]: PackageInfo;
+type SupportedPackageManagers = {
+  [prop: string]: PackageManagerInfo;
 };
 
-export interface PackageInfo {
+export interface PackageManagerInfo {
   lockFilePatterns: Array<string>;
   getCacheFolderCommand: string;
 }
 
-export const supportedPackageManagers: SupportedPackageManager = {
+export const supportedPackageManagers: SupportedPackageManagers = {
   npm: {
     lockFilePatterns: ['package-lock.json', 'yarn.lock'],
     getCacheFolderCommand: 'npm config get cache'
@@ -63,7 +63,7 @@ const getpackageManagerVersion = async (
 };
 
 export const getPackageManagerInfo = async (packageManager: string) => {
-  let packageManagerInfo: PackageInfo;
+  let packageManagerInfo: PackageManagerInfo;
   if (packageManager === 'npm') {
     return supportedPackageManagers.npm;
   } else if (packageManager === 'yarn') {
@@ -79,7 +79,7 @@ export const getPackageManagerInfo = async (packageManager: string) => {
 };
 
 export const getCacheDirectoryPath = async (
-  packageManagerInfo: PackageInfo,
+  packageManagerInfo: PackageManagerInfo,
   packageManager: string
 ) => {
   const stdOut = await getCommandOutput(

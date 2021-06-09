@@ -8,7 +8,7 @@ import {
   getCacheDirectoryPath,
   hashFile,
   getPackageManagerInfo,
-  PackageInfo
+  PackageManagerInfo
 } from './cache-utils';
 
 export const restoreCache = async (packageManager: string) => {
@@ -41,8 +41,8 @@ export const restoreCache = async (packageManager: string) => {
   core.info(`Cache restored from key: ${cacheKey}`);
 };
 
-const findLockFile = (supportedPackageManager: PackageInfo) => {
-  let lockFiles = supportedPackageManager.lockFilePatterns;
+const findLockFile = (packageManager: PackageManagerInfo) => {
+  let lockFiles = packageManager.lockFilePatterns;
   const workspace = process.env.GITHUB_WORKSPACE!;
   const rootContent = fs.readdirSync(workspace);
 

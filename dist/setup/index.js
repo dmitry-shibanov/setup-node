@@ -43422,8 +43422,8 @@ exports.restoreCache = (packageManager) => __awaiter(void 0, void 0, void 0, fun
     core.setOutput(constants_1.Outputs.CacheHit, isExactMatch);
     core.info(`Cache restored from key: ${cacheKey}`);
 });
-const findLockFile = (supportedPackageManager) => {
-    let lockFiles = supportedPackageManager.lockFilePatterns;
+const findLockFile = (packageManager) => {
+    let lockFiles = packageManager.lockFilePatterns;
     const workspace = process.env.GITHUB_WORKSPACE;
     const rootContent = fs_1.default.readdirSync(workspace);
     const fullLockFile = rootContent.find(item => lockFiles.includes(item));
