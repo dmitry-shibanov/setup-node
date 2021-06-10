@@ -43424,11 +43424,11 @@ const findLockFile = (packageManager) => {
     let lockFiles = packageManager.lockFilePatterns;
     const workspace = process.env.GITHUB_WORKSPACE;
     const rootContent = fs_1.default.readdirSync(workspace);
-    const fullLockFile = rootContent.find(item => lockFiles.includes(item));
-    if (!fullLockFile) {
+    const lockFile = lockFiles.find(item => rootContent.includes(item));
+    if (!lockFile) {
         throw new Error(`Dependencies lock file is not found in ${workspace}. Supported file patterns: ${lockFiles.toString()}`);
     }
-    return path_1.default.resolve(fullLockFile);
+    return path_1.default.resolve(lockFile);
 };
 
 
