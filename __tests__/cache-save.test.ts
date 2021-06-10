@@ -7,7 +7,7 @@ import * as utils from '../src/cache-utils';
 import {run} from '../src/cache-save';
 import {State} from '../src/constants';
 
-describe('cahe-save', () => {
+describe('run', () => {
   const yarnFileHash =
     'b8a0bae5243251f7c07dd52d1f78ff78281dfefaded700a176261b6b54fa245b';
   const npmFileHash =
@@ -244,6 +244,5 @@ describe('cahe-save', () => {
   afterEach(() => {
     jest.resetAllMocks();
     jest.clearAllMocks();
-    //jest.restoreAllMocks();
   });
 });

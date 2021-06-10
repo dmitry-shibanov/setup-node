@@ -45,45 +45,8 @@ describe('cache-utils', () => {
     });
   });
 
-  describe('getCacheDirectoryPath', () => {
-    it('getCacheDirectoryPath for npm', async () => {
-      getCommandOutputSpy.mockImplementationOnce(getPackagePath);
-      const packageManagerInfo = (await utils.getPackageManagerInfo(
-        'npm'
-      )) as utils.PackageManagerInfo;
-      await expect(
-        utils.getCacheDirectoryPath(packageManagerInfo, 'npm')
-      ).resolves.toBe(`${commonPath}/npm`);
-    });
-
-    it('getCacheDirectoryPath for yarn 2', async () => {
-      getCommandOutputSpy
-        .mockImplementationOnce(() => versionYarn2)
-        .mockImplementationOnce(getPackagePath);
-      const packageManagerInfo = (await utils.getPackageManagerInfo(
-        'yarn'
-      )) as utils.PackageManagerInfo;
-      await expect(
-        utils.getCacheDirectoryPath(packageManagerInfo, 'yarn')
-      ).resolves.toBe(`${commonPath}/yarn2`);
-    });
-
-    it('getCacheDirectoryPath for yarn 1', async () => {
-      getCommandOutputSpy
-        .mockImplementationOnce(() => versionYarn1)
-        .mockImplementationOnce(getPackagePath);
-      const packageManagerInfo = (await utils.getPackageManagerInfo(
-        'yarn'
-      )) as utils.PackageManagerInfo;
-      await expect(
-        utils.getCacheDirectoryPath(packageManagerInfo, 'yarn')
-      ).resolves.toBe(`${commonPath}/yarn1`);
-    });
-  });
-
   afterEach(() => {
     jest.resetAllMocks();
     jest.clearAllMocks();
-    //jest.restoreAllMocks();
   });
 });

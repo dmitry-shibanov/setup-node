@@ -26,7 +26,18 @@ describe('cache-restore', () => {
     [yarn2CachePath]: yarnFileHash
   };
 
-  let packageManagerVersion = '1.2.3';
+  function findCacheFolder(command: string) {
+    switch (command) {
+      case utils.supportedPackageManagers.npm.getCacheFolderCommand:
+        return npmCachePath;
+      case utils.supportedPackageManagers.yarn1.getCacheFolderCommand:
+        return yarn1CachePath;
+      case utils.supportedPackageManagers.yarn2.getCacheFolderCommand:
+        return yarn2CachePath;
+      default:
+        return 'packge/not/found';
+    }
+  }
 
   let saveStateSpy: jest.SpyInstance;
   let infoSpy: jest.SpyInstance;
@@ -83,22 +94,6 @@ describe('cache-restore', () => {
 
     // cache-utils
     getCommandOutputSpy = jest.spyOn(utils, 'getCommandOutput');
-    getCommandOutputSpy.mockImplementation((command: string) => {
-      if (command.includes('version')) {
-        return packageManagerVersion;
-      } else {
-        switch (command) {
-          case utils.supportedPackageManagers.npm.getCacheFolderCommand:
-            return npmCachePath;
-          case utils.supportedPackageManagers.yarn1.getCacheFolderCommand:
-            return yarn1CachePath;
-          case utils.supportedPackageManagers.yarn2.getCacheFolderCommand:
-            return yarn2CachePath;
-          default:
-            return 'packge/not/found';
-        }
-      }
-    });
   });
 
   describe('Validate provided package manager', () => {
@@ -120,9 +115,13 @@ describe('cache-restore', () => {
     ])(
       'restored dependencies for %s',
       async (packageManager, toolVersion, fileHash) => {
-        if (toolVersion) {
-          packageManagerVersion = toolVersion;
-        }
+        getCommandOutputSpy.mockImplementation((command: string) => {
+          if (command.includes('version')) {
+            return toolVersion;
+          } else {
+            return findCacheFolder(command);
+          }
+        });
 
         await restoreCache(packageManager);
         expect(hashFilesSpy).toHaveBeenCalled();
@@ -144,9 +143,14 @@ describe('cache-restore', () => {
     ])(
       'dependencies are changed %s',
       async (packageManager, toolVersion, fileHash) => {
-        if (toolVersion) {
-          packageManagerVersion = toolVersion;
-        }
+        getCommandOutputSpy.mockImplementation((command: string) => {
+          if (command.includes('version')) {
+            return toolVersion;
+          } else {
+            return findCacheFolder(command);
+          }
+        });
+
         restoreCacheSpy.mockImplementationOnce(() => undefined);
         await restoreCache(packageManager);
         expect(hashFilesSpy).toHaveBeenCalled();
@@ -160,6 +164,5 @@ describe('cache-restore', () => {
   afterEach(() => {
     jest.resetAllMocks();
     jest.clearAllMocks();
-    //jest.restoreAllMocks();
   });
 });
