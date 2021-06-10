@@ -8,7 +8,7 @@ import {State, Outputs} from './constants';
 import {
   getCacheDirectoryPath,
   getPackageManagerInfo,
-  PackageInfo
+  PackageManagerInfo
 } from './cache-utils';
 
 export const restoreCache = async (packageManager: string) => {
@@ -43,17 +43,17 @@ export const restoreCache = async (packageManager: string) => {
   core.info(`Cache restored from key: ${cacheKey}`);
 };
 
-const findLockFile = (supportedPackageManager: PackageInfo) => {
-  let lockFiles = supportedPackageManager.lockFilePatterns;
+const findLockFile = (packageManager: PackageManagerInfo) => {
+  let lockFiles = packageManager.lockFilePatterns;
   const workspace = process.env.GITHUB_WORKSPACE!;
   const rootContent = fs.readdirSync(workspace);
 
-  const fullLockFile = rootContent.find(item => lockFiles.includes(item));
-  if (!fullLockFile) {
+  const lockFile = lockFiles.find(item => rootContent.includes(item));
+  if (!lockFile) {
     throw new Error(
       `Dependencies lock file is not found in ${workspace}. Supported file patterns: ${lockFiles.toString()}`
     );
   }
 
-  return path.join(workspace, fullLockFile);
+  return path.join(workspace, lockFile);
 };

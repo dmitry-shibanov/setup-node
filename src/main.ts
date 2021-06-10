@@ -48,11 +48,10 @@ export async function run() {
     }
 
     if (cache) {
-      if (!isGhes()) {
-        await restoreCache(cache);
-      } else {
+      if (isGhes()) {
         throw new Error('Caching is not supported on GHES');
       }
+      await restoreCache(cache);
     }
 
     const matchersPath = path.join(__dirname, '../..', '.github');

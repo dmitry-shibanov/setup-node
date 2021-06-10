@@ -38733,8 +38733,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCacheDirectoryPath = exports.getPackageManagerInfo = exports.getCommandOutput = exports.supportedPackageManagers = void 0;
-const exec = __importStar(__webpack_require__(986));
 const core = __importStar(__webpack_require__(470));
+const exec = __importStar(__webpack_require__(986));
 exports.supportedPackageManagers = {
     npm: {
         lockFilePatterns: ['package-lock.json', 'yarn.lock'],
@@ -38756,7 +38756,7 @@ exports.getCommandOutput = (toolCommand) => __awaiter(void 0, void 0, void 0, fu
     }
     return stdout;
 });
-const getpackageManagerVersion = (packageManager, command) => __awaiter(void 0, void 0, void 0, function* () {
+const getPackageManagerVersion = (packageManager, command) => __awaiter(void 0, void 0, void 0, function* () {
     const stdOut = yield exports.getCommandOutput(`${packageManager} ${command}`);
     if (!stdOut) {
         throw new Error(`Could not retrieve version of ${packageManager}`);
@@ -38768,8 +38768,8 @@ exports.getPackageManagerInfo = (packageManager) => __awaiter(void 0, void 0, vo
         return exports.supportedPackageManagers.npm;
     }
     else if (packageManager === 'yarn') {
-        const yarnVersion = yield getpackageManagerVersion('yarn', '--version');
-        core.debug(`consumed yarn version is ${yarnVersion}`);
+        const yarnVersion = yield getPackageManagerVersion('yarn', '--version');
+        core.debug(`Consumed yarn version is ${yarnVersion}`);
         if (yarnVersion.startsWith('1.')) {
             return exports.supportedPackageManagers.yarn1;
         }
@@ -50608,7 +50608,7 @@ const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, func
     }
     try {
         yield cache.saveCache([cachePath], primaryKey);
-        core.info(`Cache saved with key: ${primaryKey}`);
+        core.info(`Cache saved with the key: ${primaryKey}`);
     }
     catch (error) {
         if (error.name === cache.ValidationError.name) {

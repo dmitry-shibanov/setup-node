@@ -1,16 +1,16 @@
-import * as exec from '@actions/exec';
 import * as core from '@actions/core';
+import * as exec from '@actions/exec';
 
-type SupportedPackageManager = {
-  [prop: string]: PackageInfo;
+type SupportedPackageManagers = {
+  [prop: string]: PackageManagerInfo;
 };
 
-export interface PackageInfo {
+export interface PackageManagerInfo {
   lockFilePatterns: Array<string>;
   getCacheFolderCommand: string;
 }
 
-export const supportedPackageManagers: SupportedPackageManager = {
+export const supportedPackageManagers: SupportedPackageManagers = {
   npm: {
     lockFilePatterns: ['package-lock.json', 'yarn.lock'],
     getCacheFolderCommand: 'npm config get cache'
@@ -35,7 +35,7 @@ export const getCommandOutput = async (toolCommand: string) => {
   return stdout;
 };
 
-const getpackageManagerVersion = async (
+const getPackageManagerVersion = async (
   packageManager: string,
   command: string
 ) => {
@@ -52,9 +52,9 @@ export const getPackageManagerInfo = async (packageManager: string) => {
   if (packageManager === 'npm') {
     return supportedPackageManagers.npm;
   } else if (packageManager === 'yarn') {
-    const yarnVersion = await getpackageManagerVersion('yarn', '--version');
+    const yarnVersion = await getPackageManagerVersion('yarn', '--version');
 
-    core.debug(`consumed yarn version is ${yarnVersion}`);
+    core.debug(`Consumed yarn version is ${yarnVersion}`);
 
     if (yarnVersion.startsWith('1.')) {
       return supportedPackageManagers.yarn1;
@@ -67,7 +67,7 @@ export const getPackageManagerInfo = async (packageManager: string) => {
 };
 
 export const getCacheDirectoryPath = async (
-  packageManagerInfo: PackageInfo,
+  packageManagerInfo: PackageManagerInfo,
   packageManager: string
 ) => {
   const stdOut = await getCommandOutput(

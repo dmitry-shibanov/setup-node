@@ -7382,12 +7382,10 @@ function run() {
                 auth.configAuthentication(registryUrl, alwaysAuth);
             }
             if (cache) {
-                if (!isGhes()) {
-                    yield cache_restore_1.restoreCache(cache);
-                }
-                else {
+                if (isGhes()) {
                     throw new Error('Caching is not supported on GHES');
                 }
+                yield cache_restore_1.restoreCache(cache);
             }
             const matchersPath = path.join(__dirname, '../..', '.github');
             core.info(`##[add-matcher]${path.join(matchersPath, 'tsc.json')}`);
@@ -42747,15 +42745,15 @@ exports.restoreCache = (packageManager) => __awaiter(void 0, void 0, void 0, fun
     core.setOutput(constants_1.Outputs.CacheHit, isExactMatch);
     core.info(`Cache restored from key: ${cacheKey}`);
 });
-const findLockFile = (supportedPackageManager) => {
-    let lockFiles = supportedPackageManager.lockFilePatterns;
+const findLockFile = (packageManager) => {
+    let lockFiles = packageManager.lockFilePatterns;
     const workspace = process.env.GITHUB_WORKSPACE;
     const rootContent = fs_1.default.readdirSync(workspace);
-    const fullLockFile = rootContent.find(item => lockFiles.includes(item));
-    if (!fullLockFile) {
+    const lockFile = lockFiles.find(item => rootContent.includes(item));
+    if (!lockFile) {
         throw new Error(`Dependencies lock file is not found in ${workspace}. Supported file patterns: ${lockFiles.toString()}`);
     }
-    return path_1.default.join(workspace, fullLockFile);
+    return path_1.default.join(workspace, lockFile);
 };
 
 
@@ -44017,8 +44015,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCacheDirectoryPath = exports.getPackageManagerInfo = exports.getCommandOutput = exports.supportedPackageManagers = void 0;
-const exec = __importStar(__webpack_require__(986));
 const core = __importStar(__webpack_require__(470));
+const exec = __importStar(__webpack_require__(986));
 exports.supportedPackageManagers = {
     npm: {
         lockFilePatterns: ['package-lock.json', 'yarn.lock'],
@@ -44040,7 +44038,7 @@ exports.getCommandOutput = (toolCommand) => __awaiter(void 0, void 0, void 0, fu
     }
     return stdout;
 });
-const getpackageManagerVersion = (packageManager, command) => __awaiter(void 0, void 0, void 0, function* () {
+const getPackageManagerVersion = (packageManager, command) => __awaiter(void 0, void 0, void 0, function* () {
     const stdOut = yield exports.getCommandOutput(`${packageManager} ${command}`);
     if (!stdOut) {
         throw new Error(`Could not retrieve version of ${packageManager}`);
@@ -44052,8 +44050,8 @@ exports.getPackageManagerInfo = (packageManager) => __awaiter(void 0, void 0, vo
         return exports.supportedPackageManagers.npm;
     }
     else if (packageManager === 'yarn') {
-        const yarnVersion = yield getpackageManagerVersion('yarn', '--version');
-        core.debug(`consumed yarn version is ${yarnVersion}`);
+        const yarnVersion = yield getPackageManagerVersion('yarn', '--version');
+        core.debug(`Consumed yarn version is ${yarnVersion}`);
         if (yarnVersion.startsWith('1.')) {
             return exports.supportedPackageManagers.yarn1;
         }
