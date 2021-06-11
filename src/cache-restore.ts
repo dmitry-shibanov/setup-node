@@ -38,8 +38,6 @@ export const restoreCache = async (packageManager: string) => {
   }
 
   core.saveState(State.CacheMatchedKey, cacheKey);
-  const isExactMatch = (primaryKey === cacheKey).toString();
-  core.setOutput(Outputs.CacheHit, isExactMatch);
   core.info(`Cache restored from key: ${cacheKey}`);
 };
 
