@@ -43416,8 +43416,6 @@ exports.restoreCache = (packageManager) => __awaiter(void 0, void 0, void 0, fun
         return;
     }
     core.saveState(constants_1.State.CacheMatchedKey, cacheKey);
-    const isExactMatch = (primaryKey === cacheKey).toString();
-    core.setOutput(constants_1.Outputs.CacheHit, isExactMatch);
     core.info(`Cache restored from key: ${cacheKey}`);
 });
 const findLockFile = (packageManager) => {
