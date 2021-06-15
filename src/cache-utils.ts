@@ -1,11 +1,5 @@
-import * as crypto from 'crypto';
-import * as fs from 'fs';
-import * as stream from 'stream';
-import * as util from 'util';
-import * as path from 'path';
-
+import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import * as glob from '@actions/glob';
 
 type SupportedPackageManagers = {
   [prop: string]: PackageManagerInfo;
@@ -31,22 +25,14 @@ export const supportedPackageManagers: SupportedPackageManagers = {
   }
 };
 
-const getCommandOutput = async (toolCommand: string) => {
-  let stdOut: string | undefined;
-  let stdErr: string | undefined;
+export const getCommandOutput = async (toolCommand: string) => {
+  const {stdout, stderr, exitCode} = await exec.getExecOutput(toolCommand);
 
-  await exec.exec(toolCommand, undefined, {
-    listeners: {
-      stderr: (err: Buffer) => (stdErr = err.toString()),
-      stdout: (out: Buffer) => (stdOut = out.toString())
-    }
-  });
-
-  if (stdErr) {
-    throw new Error(stdErr);
+  if (stderr) {
+    throw new Error(stderr);
   }
 
-  return stdOut;
+  return stdout;
 };
 
 const getPackageManagerVersion = async (
@@ -63,11 +49,13 @@ const getPackageManagerVersion = async (
 };
 
 export const getPackageManagerInfo = async (packageManager: string) => {
-  let packageManagerInfo: PackageManagerInfo;
   if (packageManager === 'npm') {
     return supportedPackageManagers.npm;
   } else if (packageManager === 'yarn') {
     const yarnVersion = await getPackageManagerVersion('yarn', '--version');
+
+    core.debug(`Consumed yarn version is ${yarnVersion}`);
+
     if (yarnVersion.startsWith('1.')) {
       return supportedPackageManagers.yarn1;
     } else {
@@ -90,36 +78,7 @@ export const getCacheDirectoryPath = async (
     throw new Error(`Could not get cache folder path for ${packageManager}`);
   }
 
+  core.debug(`${packageManager} path is ${stdOut}`);
+
   return stdOut;
 };
-
-// https://github.com/actions/runner/blob/master/src/Misc/expressionFunc/hashFiles/src/hashFiles.ts
-// replace it, when the issue will be resolved: https://github.com/actions/toolkit/issues/472
-export async function hashFile(matchPatterns: string): Promise<string> {
-  let hasMatch = false;
-  let followSymbolicLinks = false;
-  if (process.env.followSymbolicLinks === 'true') {
-    followSymbolicLinks = true;
-  }
-  const githubWorkspace = process.env.GITHUB_WORKSPACE;
-  const result = crypto.createHash('sha256');
-  const globber = await glob.create(matchPatterns, {followSymbolicLinks});
-  for await (const file of globber.globGenerator()) {
-    if (!file.startsWith(`${githubWorkspace}${path.sep}`)) {
-      continue;
-    }
-    if (fs.statSync(file).isDirectory()) {
-      continue;
-    }
-    const hash = crypto.createHash('sha256');
-    const pipeline = util.promisify(stream.pipeline);
-    await pipeline(fs.createReadStream(file), hash);
-    result.write(hash.digest());
-    if (!hasMatch) {
-      hasMatch = true;
-    }
-  }
-  result.end();
-
-  return result.digest('hex');
-}

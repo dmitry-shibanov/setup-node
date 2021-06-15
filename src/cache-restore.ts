@@ -1,12 +1,12 @@
 import * as cache from '@actions/cache';
 import * as core from '@actions/core';
+import * as glob from '@actions/glob';
 import path from 'path';
 import fs from 'fs';
 
 import {State, Outputs} from './constants';
 import {
   getCacheDirectoryPath,
-  hashFile,
   getPackageManagerInfo,
   PackageManagerInfo
 } from './cache-utils';
@@ -23,9 +23,11 @@ export const restoreCache = async (packageManager: string) => {
     packageManager
   );
   const lockFilePath = findLockFile(packageManagerInfo);
-  const fileHash = await hashFile(lockFilePath);
+  const fileHash = glob.hashFiles(lockFilePath);
 
   const primaryKey = `${platform}-${packageManager}-${fileHash}`;
+  core.debug(`primary key is ${primaryKey}`);
+
   core.saveState(State.CachePrimaryKey, primaryKey);
 
   const cacheKey = await cache.restoreCache([cachePath], primaryKey);
@@ -51,5 +53,5 @@ const findLockFile = (packageManager: PackageManagerInfo) => {
     );
   }
 
-  return path.resolve(lockFile);
+  return path.join(workspace, lockFile);
 };
