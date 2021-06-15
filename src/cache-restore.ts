@@ -23,7 +23,7 @@ export const restoreCache = async (packageManager: string) => {
     packageManager
   );
   const lockFilePath = findLockFile(packageManagerInfo);
-  const fileHash = glob.hashFiles(lockFilePath);
+  const fileHash = await glob.hashFiles(lockFilePath);
 
   const primaryKey = `${platform}-${packageManager}-${fileHash}`;
   core.debug(`primary key is ${primaryKey}`);

@@ -42731,7 +42731,7 @@ exports.restoreCache = (packageManager) => __awaiter(void 0, void 0, void 0, fun
     const platform = process.env.RUNNER_OS;
     const cachePath = yield cache_utils_1.getCacheDirectoryPath(packageManagerInfo, packageManager);
     const lockFilePath = findLockFile(packageManagerInfo);
-    const fileHash = glob.hashFiles(lockFilePath);
+    const fileHash = yield glob.hashFiles(lockFilePath);
     const primaryKey = `${platform}-${packageManager}-${fileHash}`;
     core.debug(`primary key is ${primaryKey}`);
     core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
