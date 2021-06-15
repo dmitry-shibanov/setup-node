@@ -93,8 +93,8 @@ describe('run', () => {
     });
   });
 
-  describe('it does not save cache, because nothing is changed', () => {
-    it('yarn 1', async () => {
+  describe('Validate unchanged cache is not saved', () => {
+    it('should not save cache for yarn1', async () => {
       inputs['cache'] = 'yarn';
       getStateSpy.mockImplementation(() => yarnFileHash);
       getCommandOutputSpy
@@ -114,7 +114,7 @@ describe('run', () => {
       expect(setFailedSpy).not.toHaveBeenCalled();
     });
 
-    it('yarn 2', async () => {
+    it('should not save cache for yarn2', async () => {
       inputs['cache'] = 'yarn';
       getStateSpy.mockImplementation(() => yarnFileHash);
       getCommandOutputSpy
@@ -134,7 +134,7 @@ describe('run', () => {
       expect(setFailedSpy).not.toHaveBeenCalled();
     });
 
-    it('npm', async () => {
+    it('should not save cache for npm', async () => {
       inputs['cache'] = 'npm';
       getStateSpy.mockImplementation(() => npmFileHash);
       getCommandOutputSpy.mockImplementationOnce(() => `${commonPath}/npm`);
@@ -213,7 +213,7 @@ describe('run', () => {
       expect(setFailedSpy).not.toHaveBeenCalled();
     });
 
-    it('npm', async () => {
+    it('saves cache from npm', async () => {
       inputs['cache'] = 'npm';
       getStateSpy.mockImplementation((name: string) => {
         if (name === State.CacheMatchedKey) {

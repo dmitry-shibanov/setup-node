@@ -13,6 +13,7 @@ on:
       
 jobs:
   node-npm-depencies-caching:
+    name: Test npm (Node ${{ matrix.node-version}}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -35,6 +36,7 @@ jobs:
         shell: bash
 
   node-yarn1-depencies-caching:
+    name: Test yarn 1 (Node ${{ matrix.node-version}}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -64,6 +66,7 @@ jobs:
         shell: bash
 
   node-yarn2-depencies-caching:
+    name: Test yarn 2 (Node ${{ matrix.node-version}}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
