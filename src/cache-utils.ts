@@ -26,7 +26,11 @@ export const supportedPackageManagers: SupportedPackageManagers = {
 };
 
 export const getCommandOutput = async (toolCommand: string) => {
-  const {stdout, stderr, exitCode} = await exec.getExecOutput(toolCommand);
+  const {stdout, stderr, exitCode} = await exec.getExecOutput(
+    toolCommand,
+    undefined,
+    {silent: true}
+  );
 
   if (stderr) {
     throw new Error(stderr);
