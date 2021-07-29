@@ -41,9 +41,7 @@ nvm lts syntax: `lts/erbium`, `lts/fermium`, `lts/*`
 
 ### Caching packages dependencies
 
-The action has a built-in functionality for caching and restoring npm/yarn dependencies. Supported package managers are `npm`, `yarn`, `pnpm`. The `cache` input is optional, and caching is turned off by default. By default action hashes dependency  
-file from the root of the project. To override file dependency search use `cache-dependency-path`. The field accepts wildcards or  
-input array of files to be cached.
+The action has a built-in functionality for caching and restoring npm/yarn dependencies. Supported package managers are `npm`, `yarn`, `pnpm`. The `cache` input is optional, and caching is turned off by default. By default, action hashes the dependency file from the project root. Use `cache-dependency-path` to specify custom file dependency lookup path. The field accepts wildcards or an array of files to be cached.
 
 **Caching npm dependencies:**
 ```yaml

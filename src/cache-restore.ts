@@ -31,7 +31,9 @@ export const restoreCache = async (
   const fileHash = await glob.hashFiles(lockFilePath);
 
   if (!fileHash) {
-    throw new Error('One of the specified path does not exist');
+    throw new Error(
+      'Some specified paths were not resolved, unable to cache dependencies.'
+    );
   }
 
   const primaryKey = `node-cache-${platform}-${packageManager}-${fileHash}`;

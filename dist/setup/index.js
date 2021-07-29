@@ -44668,7 +44668,7 @@ exports.restoreCache = (packageManager, cacheDependencyPath) => __awaiter(void 0
         : findLockFile(packageManagerInfo);
     const fileHash = yield glob.hashFiles(lockFilePath);
     if (!fileHash) {
-        throw new Error('One of the specified path does not exist');
+        throw new Error('Some specified paths were not resolved, unable to cache dependencies.');
     }
     const primaryKey = `node-cache-${platform}-${packageManager}-${fileHash}`;
     core.debug(`primary key is ${primaryKey}`);
