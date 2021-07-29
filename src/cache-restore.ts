@@ -13,7 +13,7 @@ import {
 
 export const restoreCache = async (
   packageManager: string,
-  cacheDependencyPaths: string
+  cacheDependencyPath?: string
 ) => {
   const packageManagerInfo = await getPackageManagerInfo(packageManager);
   if (!packageManagerInfo) {
@@ -25,8 +25,8 @@ export const restoreCache = async (
     packageManagerInfo,
     packageManager
   );
-  const lockFilePath = cacheDependencyPaths
-    ? cacheDependencyPaths
+  const lockFilePath = cacheDependencyPath
+    ? cacheDependencyPath
     : findLockFile(packageManagerInfo);
   const fileHash = await glob.hashFiles(lockFilePath);
 

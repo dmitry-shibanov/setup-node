@@ -48,10 +48,10 @@ export async function run() {
     }
 
     if (cache) {
-      const cacheDependencyPath = core.getInput('cache-dependency-path');
       if (isGhes()) {
         throw new Error('Caching is not supported on GHES');
       }
+      const cacheDependencyPath = core.getInput('cache-dependency-path');
       await restoreCache(cache, cacheDependencyPath);
     }
 

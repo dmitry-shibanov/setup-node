@@ -41,7 +41,9 @@ nvm lts syntax: `lts/erbium`, `lts/fermium`, `lts/*`
 
 ### Caching packages dependencies
 
-The action has a built-in functionality for caching and restoring npm/yarn dependencies. Supported package managers are `npm`, `yarn`, `pnpm`. The `cache` input is optional, and caching is turned off by default.
+The action has a built-in functionality for caching and restoring npm/yarn dependencies. Supported package managers are `npm`, `yarn`, `pnpm`. The `cache` input is optional, and caching is turned off by default. By default action hashes dependency  
+file from the root of the project. To override file dependency search use `cache-dependency-path`. The field accepts wildcards or  
+input array of files to be cached.
 
 **Caching npm dependencies:**
 ```yaml
@@ -66,6 +68,34 @@ steps:
 - run: yarn install
 - run: yarn test
 ```
+
+**Caching all npm dependencies:**
+```yaml
+steps:
+- uses: actions/checkout@v2
+- uses: actions/setup-node@v2
+  with:
+    node-version: '14'
+    cache: 'npm'
+    cache-dependency-path: '**/package-lock.json'
+- run: npm install
+- run: npm test
+```
+
+**Caching specific paths**
+```yaml
+steps:
+- uses: actions/checkout@v2
+- uses: actions/setup-node@v2
+  with:
+    node-version: '14'
+    cache: 'npm'
+    cache-dependency-path: |
+      server/app/package-lock.json
+      frontend/app/package-lock.json
+- run: npm install
+- run: npm test
+```
 Yarn caching handles both yarn versions: 1 or 2.
 
 **Caching pnpm (v6.10+) dependencies:**
@@ -89,8 +119,6 @@ steps:
 - run: pnpm install
 - run: pnpm test
 ```
-
-> At the moment, only `lock` files in the project root are supported.
 
 ### Matrix Testing:
 ```yaml

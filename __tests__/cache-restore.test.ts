@@ -108,7 +108,7 @@ describe('cache-restore', () => {
     it.each([['npm7'], ['npm6'], ['pnpm6'], ['yarn1'], ['yarn2'], ['random']])(
       'Throw an error because %s is not supported',
       async packageManager => {
-        await expect(restoreCache(packageManager, '')).rejects.toThrowError(
+        await expect(restoreCache(packageManager)).rejects.toThrowError(
           `Caching for '${packageManager}' is not supported`
         );
       }
@@ -132,7 +132,7 @@ describe('cache-restore', () => {
           }
         });
 
-        await restoreCache(packageManager, '');
+        await restoreCache(packageManager);
         expect(hashFilesSpy).toHaveBeenCalled();
         expect(infoSpy).toHaveBeenCalledWith(
           `Cache restored from key: node-cache-${platform}-${packageManager}-${fileHash}`
@@ -162,7 +162,7 @@ describe('cache-restore', () => {
         });
 
         restoreCacheSpy.mockImplementationOnce(() => undefined);
-        await restoreCache(packageManager, '');
+        await restoreCache(packageManager);
         expect(hashFilesSpy).toHaveBeenCalled();
         expect(infoSpy).toHaveBeenCalledWith(
           `${packageManager} cache is not found`
