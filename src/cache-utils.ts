@@ -31,6 +31,8 @@ export const supportedPackageManagers: SupportedPackageManagers = {
 
 export const getCommandOutput = async (toolCommand: string) => {
   const {stdout, stderr, exitCode} = await exec.getExecOutput(toolCommand);
+  core.info(`getCommandOutput is ${stdout}`);
+  core.info(`getCommandOutput is ${stdout}`);
 
   if (stderr) {
     throw new Error(stderr);
