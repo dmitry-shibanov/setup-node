@@ -596,9 +596,10 @@ describe('setup-node', () => {
       );
       expect(parseNodeVersionSpy).toHaveBeenCalledWith(versionSpec);
       expect(logSpy).toHaveBeenCalledWith(
-        `Resolved ${versionFile} as ${expectedVersionSpec}`);
-      });
+        `Resolved ${versionFile} as ${expectedVersionSpec}`
+      );
     });
+  });
   describe('LTS version', () => {
     beforeEach(() => {
       os.platform = 'linux';
