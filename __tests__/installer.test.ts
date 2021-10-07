@@ -105,6 +105,7 @@ describe('setup-node', () => {
   });
 
   afterAll(async () => {
+    jest.restoreAllMocks();
     console.log('::stoptoken::'); // Re-enable executing of runner commands when running tests in actions
   }, 100000);
 
