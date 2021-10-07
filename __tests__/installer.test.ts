@@ -554,7 +554,6 @@ describe('setup-node', () => {
       expect(cnSpy).toHaveBeenCalledWith(`::add-path::${expPath}${osm.EOL}`);
 
       console.log(process.env);
-      
     });
   });
 
@@ -780,7 +779,7 @@ describe('setup-node', () => {
     it('Not used if node-version is provided', async () => {
       // Arrange
       inputs['node-version'] = '12';
-  
+
       let toolPath = path.normalize('/cache/node/12.16.1/x64');
       findSpy.mockImplementation(() => toolPath);
 
@@ -809,10 +808,9 @@ describe('setup-node', () => {
       process.env['GITHUB_WORKSPACE'] = path.join(__dirname, '..');
       console.log(`GITHUB_WORKSPACE ${process.env['GITHUB_WORKSPACE']}`);
       console.log(`second check ${path.join(__dirname, '..', versionFile)}`);
-      
+
       inputs['node-version-file'] = versionFile;
       console.log(inputs);
-      
 
       readFileSyncSpy.mockImplementation(() => versionSpec);
       parseNodeVersionSpy.mockImplementation(() => expectedVersionSpec);
