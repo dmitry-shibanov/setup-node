@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as installer from './installer';
-import fs = require('fs');
+import fs from 'fs';
 import * as auth from './authutil';
 import * as path from 'path';
 import {restoreCache} from './cache-restore';
@@ -20,9 +20,12 @@ export async function run() {
       if (!version) {
         const versionFile = core.getInput('node-version-file');
 
-        if (!!versionFile) {
-          const versionFilePath = path.join(__dirname, '..', versionFile);
-          version = await installer.parseNodeVersionFile(
+        if (versionFile) {
+          const versionFilePath = path.join(
+            process.env.GITHUB_WORKSPACE!,
+            versionFile
+          );
+          version = installer.parseNodeVersionFile(
             fs.readFileSync(versionFilePath, 'utf8')
           );
           core.info(`Resolved ${versionFile} as ${version}`);
