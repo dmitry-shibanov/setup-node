@@ -1,8 +1,8 @@
 import os = require('os');
 import * as assert from 'assert';
 import * as core from '@actions/core';
-import * as hc from '@actions/http-client';
 import * as io from '@actions/io';
+import * as hc from '@actions/http-client';
 import * as tc from '@actions/tool-cache';
 import * as path from 'path';
 import * as semver from 'semver';
@@ -12,6 +12,7 @@ import fs = require('fs');
 // Node versions interface
 // see https://nodejs.org/dist/index.json
 //
+
 export interface INodeVersion {
   version: string;
   files: string[];
@@ -371,7 +372,7 @@ async function queryDistForMatch(
   }
 
   let versions: string[] = [];
-  let nodeVersions = await module.exports.getVersionsFromDist();
+  let nodeVersions = await getVersionsFromDist();
 
   nodeVersions.forEach((nodeVersion: INodeVersion) => {
     // ensure this version supports your os and platform
@@ -463,4 +464,13 @@ function translateArchToDistUrl(arch: string): string {
     default:
       return arch;
   }
+}
+
+export function parseNodeVersionFile(contents: string): string {
+  let nodeVersion = contents.trim();
+
+  if (/^v\d/.test(nodeVersion)) {
+    nodeVersion = nodeVersion.substring(1);
+  }
+  return nodeVersion;
 }

@@ -1,14 +1,14 @@
+import fs from 'fs';
+
 import * as core from '@actions/core';
 import * as io from '@actions/io';
 import * as tc from '@actions/tool-cache';
-import fs from 'fs';
+import * as im from '../src/installer';
 import cp from 'child_process';
 import osm = require('os');
 import path from 'path';
 import * as main from '../src/main';
-import * as im from '../src/installer';
 import * as auth from '../src/authutil';
-
 let nodeTestManifest = require('./data/versions-manifest.json');
 let nodeTestDist = require('./data/node-dist-index.json');
 
@@ -31,9 +31,12 @@ describe('setup-node', () => {
   let dbgSpy: jest.SpyInstance;
   let whichSpy: jest.SpyInstance;
   let existsSpy: jest.SpyInstance;
+  let readFileSyncSpy: jest.SpyInstance;
+  let jestExistsSync: jest.SpyInstance;
   let mkdirpSpy: jest.SpyInstance;
   let execSpy: jest.SpyInstance;
   let authSpy: jest.SpyInstance;
+  let parseNodeVersionSpy: jest.SpyInstance;
 
   beforeEach(() => {
     // @actions/core
@@ -58,10 +61,12 @@ describe('setup-node', () => {
     cacheSpy = jest.spyOn(tc, 'cacheDir');
     getManifestSpy = jest.spyOn(tc, 'getManifestFromRepo');
     getDistSpy = jest.spyOn(im, 'getVersionsFromDist');
+    parseNodeVersionSpy = jest.spyOn(im, 'parseNodeVersionFile');
 
     // io
     whichSpy = jest.spyOn(io, 'which');
     existsSpy = jest.spyOn(fs, 'existsSync');
+    readFileSyncSpy = jest.spyOn(fs, 'readFileSync');
     mkdirpSpy = jest.spyOn(io, 'mkdirP');
 
     // disable authentication portion for installer tests
@@ -100,6 +105,7 @@ describe('setup-node', () => {
   });
 
   afterAll(async () => {
+    jest.restoreAllMocks();
     console.log('::stoptoken::'); // Re-enable executing of runner commands when running tests in actions
   }, 100000);
 
@@ -546,6 +552,8 @@ describe('setup-node', () => {
         `Attempting to download ${versionSpec}...`
       );
       expect(cnSpy).toHaveBeenCalledWith(`::add-path::${expPath}${osm.EOL}`);
+
+      console.log(process.env);
     });
   });
 
@@ -763,6 +771,65 @@ describe('setup-node', () => {
       );
       expect(cnSpy).toHaveBeenCalledWith(
         `::error::Unable to download manifest${osm.EOL}`
+      );
+    });
+  });
+
+  describe('node-version-file flag', () => {
+    it('Not used if node-version is provided', async () => {
+      // Arrange
+      inputs['node-version'] = '12';
+
+      let toolPath = path.normalize('/cache/node/12.16.1/x64');
+      findSpy.mockImplementation(() => toolPath);
+
+      // Act
+      await main.run();
+
+      // Assert
+      expect(readFileSyncSpy).toHaveBeenCalledTimes(0);
+      expect(logSpy).toHaveBeenCalledWith(`Found in cache @ ${toolPath}`);
+    });
+
+    it('Not used if node-version-file not provided', async () => {
+      console.log(`inputs is ${inputs}`);
+      // Act
+      await main.run();
+
+      // Assert
+      expect(readFileSyncSpy).toHaveBeenCalledTimes(0);
+    });
+
+    it('Reads node-version-file if provided', async () => {
+      // Arrange
+      const versionSpec = 'v12';
+      const versionFile = '.nvmrc';
+      const expectedVersionSpec = '12';
+      process.env['GITHUB_WORKSPACE'] = path.join(__dirname, '..');
+      console.log(`GITHUB_WORKSPACE ${process.env['GITHUB_WORKSPACE']}`);
+      console.log(`second check ${path.join(__dirname, '..', versionFile)}`);
+
+      inputs['node-version-file'] = versionFile;
+      console.log(inputs);
+
+      readFileSyncSpy.mockImplementation(() => versionSpec);
+      parseNodeVersionSpy.mockImplementation(() => expectedVersionSpec);
+
+      let toolPath = path.normalize('/cache/node/12.16.1/x64');
+      findSpy.mockImplementation(() => toolPath);
+
+      // Act
+      await main.run();
+
+      // Assert
+      expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
+      expect(readFileSyncSpy).toHaveBeenCalledWith(
+        path.join(__dirname, '..', versionFile),
+        'utf8'
+      );
+      expect(parseNodeVersionSpy).toHaveBeenCalledWith(versionSpec);
+      expect(logSpy).toHaveBeenCalledWith(
+        `Resolved ${versionFile} as ${expectedVersionSpec}`
       );
     });
   });

@@ -1,5 +1,4 @@
 # setup-node
-
 <p align="left">
   <a href="https://github.com/actions/setup-node/actions?query=workflow%3Abuild-test"><img alt="build-test status" src="https://github.com/actions/setup-node/workflows/build-test/badge.svg"></a> <a href="https://github.com/actions/setup-node/actions?query=workflow%3Aversions"><img alt="versions status" src="https://github.com/actions/setup-node/workflows/versions/badge.svg"></a> <a href="https://github.com/actions/setup-node/actions?query=workflow%3Aproxy"><img alt="proxy status" src="https://github.com/actions/setup-node/workflows/proxy/badge.svg"></a> 
 </p>
@@ -72,6 +71,7 @@ steps:
 - run: npm test
 ```
 
+
 ## Matrix Testing:
 ```yaml
 jobs:
@@ -93,12 +93,13 @@ jobs:
 ## Advanced usage
 
 1. [Check latest version](docs/advanced-usage.md#check-latest-version)
-2. [Using different architectures](docs/advanced-usage.md#architecture)
-3. [Caching packages dependencies](docs/advanced-usage.md#caching-packages-dependencies)
-4. [Using multiple operating systems and architectures](docs/advanced-usage.md#multiple-operating-systems-and-architectures)
-5. [Publishing to npmjs and GPR with npm](docs/advanced-usage.md#publish-to-npmjs-and-gpr-with-npm)
-6. [Publishing to npmjs and GPR with yarn](docs/advanced-usage.md#publish-to-npmjs-and-gpr-with-yarn)
-7. [Using private packages](docs/advanced-usage.md#use-private-packages)
+2. [Using a node version file](docs/advanced-usage.md#Node-version-file)
+3. [Using different architectures](docs/advanced-usage.md#architecture)
+4. [Caching packages dependencies](docs/advanced-usage.md#caching-packages-dependencies)
+5. [Using multiple operating systems and architectures](docs/advanced-usage.md#multiple-operating-systems-and-architectures)
+6. [Publishing to npmjs and GPR with npm](docs/advanced-usage.md#publish-to-npmjs-and-gpr-with-npm)
+7. [Publishing to npmjs and GPR with yarn](docs/advanced-usage.md#publish-to-npmjs-and-gpr-with-yarn)
+8. [Using private packages](docs/advanced-usage.md#use-private-packages)
 
 # License
 
