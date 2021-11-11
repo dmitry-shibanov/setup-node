@@ -6983,7 +6983,8 @@ function run() {
             }
             if (npmVersion) {
                 const { stderr, stdout, exitCode } = yield exec.getExecOutput(`npm i -g npm@${npmVersion}`, undefined, {
-                    ignoreReturnCode: true
+                    ignoreReturnCode: true,
+                    silent: true
                 });
                 core.info(`exitCode is ${exitCode}`);
                 core.info(`stdout is ${stdout}`);

@@ -50,13 +50,14 @@ export async function run() {
     }
 
     if (npmVersion) {
-      const {
-        stderr,
-        stdout,
-        exitCode
-      } = await exec.getExecOutput(`npm i -g npm@${npmVersion}`, undefined, {
-        ignoreReturnCode: true
-      });
+      const {stderr, stdout, exitCode} = await exec.getExecOutput(
+        `npm i -g npm@${npmVersion}`,
+        undefined,
+        {
+          ignoreReturnCode: true,
+          silent: true
+        }
+      );
       core.info(`exitCode is ${exitCode}`);
       core.info(`stdout is ${stdout}`);
       core.info(`stderr is ${stderr}`);
