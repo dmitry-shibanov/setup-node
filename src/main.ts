@@ -61,9 +61,9 @@ export async function run() {
       core.info(`stdout is ${stdout}`);
       core.info(`stderr is ${stderr}`);
 
-      if (exitCode && stderr) {
-        throw new Error(stderr);
-      }
+      // if (exitCode && stderr) {
+      //   throw new Error(stderr);
+      // }
     }
 
     if (cache) {
