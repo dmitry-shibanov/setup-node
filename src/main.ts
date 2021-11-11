@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import * as installer from './installer';
 import * as auth from './authutil';
 import * as path from 'path';
+import * as exec from '@actions/exec';
 import {restoreCache} from './cache-restore';
 import {URL} from 'url';
 import os = require('os');
@@ -13,6 +14,7 @@ export async function run() {
     // If not supplied then task is still used to setup proxy, auth, etc...
     //
     let version = core.getInput('node-version');
+    let npmVersion = core.getInput('npm-version');
     if (!version) {
       version = core.getInput('version');
     }
@@ -45,6 +47,17 @@ export async function run() {
     const alwaysAuth: string = core.getInput('always-auth');
     if (registryUrl) {
       auth.configAuthentication(registryUrl, alwaysAuth);
+    }
+
+    if(npmVersion) {
+      const { stderr, stdout, exitCode } = await exec.getExecOutput(`npm i -g npm@${npmVersion}`);
+      core.info(`exitCode is ${exitCode}`);
+      core.info(`stdout is ${stdout}`);
+      core.info(`stderr is ${stderr}`);
+
+      if(exitCode && stderr) {
+        throw new Error(stderr);
+      }
     }
 
     if (cache) {
