@@ -6982,7 +6982,9 @@ function run() {
                 auth.configAuthentication(registryUrl, alwaysAuth);
             }
             if (npmVersion) {
-                const { stderr, stdout, exitCode } = yield exec.getExecOutput(`npm i -g npm@${npmVersion}`);
+                const { stderr, stdout, exitCode } = yield exec.getExecOutput(`npm i -g npm@${npmVersion}`, undefined, {
+                    ignoreReturnCode: true
+                });
                 core.info(`exitCode is ${exitCode}`);
                 core.info(`stdout is ${stdout}`);
                 core.info(`stderr is ${stderr}`);
