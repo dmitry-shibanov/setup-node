@@ -284,10 +284,10 @@ async function getInfoFromDist(
   let fileName: string =
     osPlat == 'win32'
       ? `node-v${version}-win-${osArch}`
-      : `node-v${version}-${osPlat}-${osArch}`;
+      : `node-v${version}-${osPlat}-${osArch}-musl`;
   let urlFileName: string =
     osPlat == 'win32' ? `${fileName}.7z` : `${fileName}.tar.gz`;
-  let url = `https://nodejs.org/dist/v${version}/${urlFileName}`;
+  let url = `https://unofficial-builds.nodejs.org/download/release/v${version}/${urlFileName}`;
 
   return <INodeVersionInfo>{
     downloadUrl: url,
