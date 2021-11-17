@@ -6967,12 +6967,16 @@ function run() {
             if (!arch) {
                 arch = os.arch();
             }
+            let mirror = core.getInput('mirror');
+            if (!mirror) {
+                mirror = core.getInput('node-mirror') || 'https://nodejs.org/dist';
+            }
             if (version) {
                 let token = core.getInput('token');
                 let auth = !token || isGhes() ? undefined : `token ${token}`;
                 let stable = (core.getInput('stable') || 'true').toUpperCase() === 'TRUE';
                 const checkLatest = (core.getInput('check-latest') || 'false').toUpperCase() === 'TRUE';
-                yield installer.getNode(version, stable, checkLatest, auth, arch);
+                yield installer.getNode(version, stable, checkLatest, auth, arch, mirror);
             }
             const registryUrl = core.getInput('registry-url');
             const alwaysAuth = core.getInput('always-auth');
@@ -65370,7 +65374,7 @@ const tc = __importStar(__webpack_require__(533));
 const path = __importStar(__webpack_require__(622));
 const semver = __importStar(__webpack_require__(280));
 const fs = __webpack_require__(747);
-function getNode(versionSpec, stable, checkLatest, auth, arch = os.arch()) {
+function getNode(versionSpec, stable, checkLatest, auth, arch = os.arch(), mirror) {
     return __awaiter(this, void 0, void 0, function* () {
         // Store manifest data to avoid multiple calls
         let manifest;
@@ -65433,7 +65437,7 @@ function getNode(versionSpec, stable, checkLatest, auth, arch = os.arch()) {
             // Download from nodejs.org
             //
             if (!downloadPath) {
-                info = yield getInfoFromDist(versionSpec, arch);
+                info = yield getInfoFromDist(versionSpec, arch, mirror);
                 if (!info) {
                     throw new Error(`Unable to find Node version '${versionSpec}' for platform ${osPlat} and architecture ${osArch}.`);
                 }
@@ -65443,7 +65447,7 @@ function getNode(versionSpec, stable, checkLatest, auth, arch = os.arch()) {
                 }
                 catch (err) {
                     if (err instanceof tc.HTTPError && err.httpStatusCode == 404) {
-                        return yield acquireNodeFromFallbackLocation(info.resolvedVersion, info.arch);
+                        return yield acquireNodeFromFallbackLocation(info.resolvedVersion, info.arch, mirror);
                     }
                     throw err;
                 }
@@ -65533,12 +65537,12 @@ function getInfoFromManifest(versionSpec, stable, auth, osArch = translateArchTo
         return info;
     });
 }
-function getInfoFromDist(versionSpec, arch = os.arch()) {
+function getInfoFromDist(versionSpec, arch = os.arch(), mirror) {
     return __awaiter(this, void 0, void 0, function* () {
         let osPlat = os.platform();
         let osArch = translateArchToDistUrl(arch);
         let version;
-        version = yield queryDistForMatch(versionSpec, arch);
+        version = yield queryDistForMatch(versionSpec, arch, mirror);
         if (!version) {
             return null;
         }
@@ -65550,7 +65554,7 @@ function getInfoFromDist(versionSpec, arch = os.arch()) {
             ? `node-v${version}-win-${osArch}`
             : `node-v${version}-${osPlat}-${osArch}`;
         let urlFileName = osPlat == 'win32' ? `${fileName}.7z` : `${fileName}.tar.gz`;
-        let url = `https://nodejs.org/dist/v${version}/${urlFileName}`;
+        let url = `${mirror}/v${version}/${urlFileName}`;
         return {
             downloadUrl: url,
             resolvedVersion: version,
@@ -65576,13 +65580,25 @@ function evaluateVersions(versions, versionSpec) {
     let version = '';
     core.debug(`evaluating ${versions.length} versions`);
     versions = versions.sort((a, b) => {
-        if (semver.gt(a, b)) {
+        const versionA = semver.coerce(a.version);
+        const versionB = semver.coerce(b.version);
+        // If versions are equal, compare date instead
+        if (versionA === versionB || versionA === null || versionB === null) {
+            if (new Date(a.date) > new Date(b.date)) {
+                return 1;
+            }
+            return -1;
+        }
+        if (semver.gt(versionA, versionB)) {
             return 1;
         }
         return -1;
     });
     for (let i = versions.length - 1; i >= 0; i--) {
-        const potential = versions[i];
+        const potential = versions[i].version;
+        const semverPotential = semver.coerce(potential);
+        if (semverPotential === null)
+            continue;
         const satisfied = semver.satisfies(potential, versionSpec);
         if (satisfied) {
             version = potential;
@@ -65597,7 +65613,7 @@ function evaluateVersions(versions, versionSpec) {
     }
     return version;
 }
-function queryDistForMatch(versionSpec, arch = os.arch()) {
+function queryDistForMatch(versionSpec, arch = os.arch(), mirror) {
     return __awaiter(this, void 0, void 0, function* () {
         let osPlat = os.platform();
         let osArch = translateArchToDistUrl(arch);
@@ -65617,11 +65633,11 @@ function queryDistForMatch(versionSpec, arch = os.arch()) {
                 throw new Error(`Unexpected OS '${osPlat}'`);
         }
         let versions = [];
-        let nodeVersions = yield module.exports.getVersionsFromDist();
+        let nodeVersions = yield module.exports.getVersionsFromDist(mirror);
         nodeVersions.forEach((nodeVersion) => {
             // ensure this version supports your os and platform
             if (nodeVersion.files.indexOf(dataFileName) >= 0) {
-                versions.push(nodeVersion.version);
+                versions.push(nodeVersion);
             }
         });
         // get the latest version that matches the version spec
@@ -65629,9 +65645,10 @@ function queryDistForMatch(versionSpec, arch = os.arch()) {
         return version;
     });
 }
-function getVersionsFromDist() {
+exports.queryDistForMatch = queryDistForMatch;
+function getVersionsFromDist(mirror) {
     return __awaiter(this, void 0, void 0, function* () {
-        let dataUrl = 'https://nodejs.org/dist/index.json';
+        let dataUrl = `${mirror}/index.json`;
         let httpClient = new hc.HttpClient('setup-node', [], {
             allowRetries: true,
             maxRetries: 3
@@ -65653,7 +65670,7 @@ exports.getVersionsFromDist = getVersionsFromDist;
 // This method attempts to download and cache the resources from these alternative locations.
 // Note also that the files are normally zipped but in this case they are just an exe
 // and lib file in a folder, not zipped.
-function acquireNodeFromFallbackLocation(version, arch = os.arch()) {
+function acquireNodeFromFallbackLocation(version, arch = os.arch(), mirror) {
     return __awaiter(this, void 0, void 0, function* () {
         let osPlat = os.platform();
         let osArch = translateArchToDistUrl(arch);
@@ -65666,8 +65683,8 @@ function acquireNodeFromFallbackLocation(version, arch = os.arch()) {
         let exeUrl;
         let libUrl;
         try {
-            exeUrl = `https://nodejs.org/dist/v${version}/win-${osArch}/node.exe`;
-            libUrl = `https://nodejs.org/dist/v${version}/win-${osArch}/node.lib`;
+            exeUrl = `${mirror}/v${version}/win-${osArch}/node.exe`;
+            libUrl = `${mirror}/v${version}/win-${osArch}/node.lib`;
             core.info(`Downloading only node binary from ${exeUrl}`);
             const exePath = yield tc.downloadTool(exeUrl);
             yield io.cp(exePath, path.join(tempDir, 'node.exe'));
@@ -65676,8 +65693,8 @@ function acquireNodeFromFallbackLocation(version, arch = os.arch()) {
         }
         catch (err) {
             if (err instanceof tc.HTTPError && err.httpStatusCode == 404) {
-                exeUrl = `https://nodejs.org/dist/v${version}/node.exe`;
-                libUrl = `https://nodejs.org/dist/v${version}/node.lib`;
+                exeUrl = `${mirror}/v${version}/node.exe`;
+                libUrl = `${mirror}/v${version}/node.lib`;
                 const exePath = yield tc.downloadTool(exeUrl);
                 yield io.cp(exePath, path.join(tempDir, 'node.exe'));
                 const libPath = yield tc.downloadTool(libUrl);
