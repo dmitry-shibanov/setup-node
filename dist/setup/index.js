@@ -65454,17 +65454,18 @@ function getNode(versionSpec, stable, checkLatest, auth, arch = os.arch()) {
             core.info('Extracting ...');
             let extPath;
             info = info || {}; // satisfy compiler, never null when reaches here
+            const destPath = path.join(process.env['RUNNER_TOOL_CACHE'], 'node', info.resolvedVersion, info === null || info === void 0 ? void 0 : info.arch);
             if (osPlat == 'win32') {
                 let _7zPath = path.join(__dirname, '../..', 'externals', '7zr.exe');
-                extPath = yield tc.extract7z(downloadPath, undefined, _7zPath);
+                toolPath = yield tc.extract7z(downloadPath, destPath, _7zPath);
                 // 7z extracts to folder matching file name
-                let nestedPath = path.join(extPath, path.basename(info.fileName, '.7z'));
+                let nestedPath = path.join(toolPath, path.basename(info.fileName, '.7z'));
                 if (fs.existsSync(nestedPath)) {
-                    extPath = nestedPath;
+                    toolPath = nestedPath;
                 }
             }
             else {
-                extPath = yield tc.extractTar(downloadPath, undefined, [
+                toolPath = yield tc.extractTar(downloadPath, destPath, [
                     'xz',
                     '--strip',
                     '1'
@@ -65473,8 +65474,13 @@ function getNode(versionSpec, stable, checkLatest, auth, arch = os.arch()) {
             //
             // Install into the local tool cache - node extracts with a root folder that matches the fileName downloaded
             //
-            core.info('Adding to the cache ...');
-            toolPath = yield tc.cacheDir(extPath, 'node', info.resolvedVersion, info.arch);
+            // core.info('Adding to the cache ...');
+            // toolPath = await tc.cacheDir(
+            //   extPath,
+            //   'node',
+            //   info.resolvedVersion,
+            //   info.arch
+            // );
             core.info('Done');
         }
         //

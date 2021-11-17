@@ -149,16 +149,22 @@ export async function getNode(
     core.info('Extracting ...');
     let extPath: string;
     info = info || ({} as INodeVersionInfo); // satisfy compiler, never null when reaches here
+    const destPath = path.join(
+      process.env['RUNNER_TOOL_CACHE']!,
+      'node',
+      info.resolvedVersion,
+      info?.arch
+    );
     if (osPlat == 'win32') {
       let _7zPath = path.join(__dirname, '../..', 'externals', '7zr.exe');
-      extPath = await tc.extract7z(downloadPath, undefined, _7zPath);
+      toolPath = await tc.extract7z(downloadPath, destPath, _7zPath);
       // 7z extracts to folder matching file name
-      let nestedPath = path.join(extPath, path.basename(info.fileName, '.7z'));
+      let nestedPath = path.join(toolPath, path.basename(info.fileName, '.7z'));
       if (fs.existsSync(nestedPath)) {
-        extPath = nestedPath;
+        toolPath = nestedPath;
       }
     } else {
-      extPath = await tc.extractTar(downloadPath, undefined, [
+      toolPath = await tc.extractTar(downloadPath, destPath, [
         'xz',
         '--strip',
         '1'
@@ -168,13 +174,13 @@ export async function getNode(
     //
     // Install into the local tool cache - node extracts with a root folder that matches the fileName downloaded
     //
-    core.info('Adding to the cache ...');
-    toolPath = await tc.cacheDir(
-      extPath,
-      'node',
-      info.resolvedVersion,
-      info.arch
-    );
+    // core.info('Adding to the cache ...');
+    // toolPath = await tc.cacheDir(
+    //   extPath,
+    //   'node',
+    //   info.resolvedVersion,
+    //   info.arch
+    // );
     core.info('Done');
   }
 
