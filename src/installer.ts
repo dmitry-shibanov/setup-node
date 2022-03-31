@@ -287,7 +287,8 @@ async function getInfoFromDist(
       : `node-v${version}-${osPlat}-${osArch}`;
   let urlFileName: string =
     osPlat == 'win32' ? `${fileName}.7z` : `${fileName}.tar.gz`;
-  let url = `https://nodejs.org/dist/v${version}/${urlFileName}`;
+  const isPrerelease = (semver.prerelease(versionSpec) ?? [])[0] === 'rc';
+  let url = isPrerelease ? `https://nodejs.org/download/rc/v${version}/${urlFileName}` : `https://nodejs.org/dist/v${version}/${urlFileName}`;
 
   return <INodeVersionInfo>{
     downloadUrl: url,

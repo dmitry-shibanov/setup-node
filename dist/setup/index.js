@@ -61336,6 +61336,7 @@ function getInfoFromManifest(versionSpec, stable, auth, osArch = translateArchTo
     });
 }
 function getInfoFromDist(versionSpec, arch = os.arch()) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         let osPlat = os.platform();
         let osArch = translateArchToDistUrl(arch);
@@ -61352,7 +61353,8 @@ function getInfoFromDist(versionSpec, arch = os.arch()) {
             ? `node-v${version}-win-${osArch}`
             : `node-v${version}-${osPlat}-${osArch}`;
         let urlFileName = osPlat == 'win32' ? `${fileName}.7z` : `${fileName}.tar.gz`;
-        let url = `https://nodejs.org/dist/v${version}/${urlFileName}`;
+        const isPrerelease = ((_a = semver.prerelease(versionSpec)) !== null && _a !== void 0 ? _a : [])[0] === 'rc';
+        let url = isPrerelease ? `https://nodejs.org/download/rc/v${version}/${urlFileName}` : `https://nodejs.org/dist/v${version}/${urlFileName}`;
         return {
             downloadUrl: url,
             resolvedVersion: version,
