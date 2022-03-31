@@ -371,7 +371,8 @@ async function queryDistForMatch(
   }
 
   let versions: string[] = [];
-  let nodeVersions = await getVersionsFromDist();
+  let preRelease = semver.prerelease(versionSpec) ?? [];
+  let nodeVersions = await (preRelease[0] === 'rc' ? getRcVersionsFromDist() : getVersionsFromDist());
 
   nodeVersions.forEach((nodeVersion: INodeVersion) => {
     // ensure this version supports your os and platform
@@ -387,6 +388,16 @@ async function queryDistForMatch(
 
 export async function getVersionsFromDist(): Promise<INodeVersion[]> {
   let dataUrl = 'https://nodejs.org/dist/index.json';
+  let httpClient = new hc.HttpClient('setup-node', [], {
+    allowRetries: true,
+    maxRetries: 3
+  });
+  let response = await httpClient.getJson<INodeVersion[]>(dataUrl);
+  return response.result || [];
+}
+
+export async function getRcVersionsFromDist(): Promise<INodeVersion[]> {
+  let dataUrl = 'https://nodejs.org/download/rc/index.json';
   let httpClient = new hc.HttpClient('setup-node', [], {
     allowRetries: true,
     maxRetries: 3

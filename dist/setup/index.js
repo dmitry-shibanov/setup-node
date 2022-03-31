@@ -61400,6 +61400,7 @@ function evaluateVersions(versions, versionSpec) {
     return version;
 }
 function queryDistForMatch(versionSpec, arch = os.arch()) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         let osPlat = os.platform();
         let osArch = translateArchToDistUrl(arch);
@@ -61419,7 +61420,8 @@ function queryDistForMatch(versionSpec, arch = os.arch()) {
                 throw new Error(`Unexpected OS '${osPlat}'`);
         }
         let versions = [];
-        let nodeVersions = yield getVersionsFromDist();
+        let preRelease = (_a = semver.prerelease(versionSpec)) !== null && _a !== void 0 ? _a : [];
+        let nodeVersions = yield (preRelease[0] === 'rc' ? getRcVersionsFromDist() : getVersionsFromDist());
         nodeVersions.forEach((nodeVersion) => {
             // ensure this version supports your os and platform
             if (nodeVersion.files.indexOf(dataFileName) >= 0) {
@@ -61443,6 +61445,18 @@ function getVersionsFromDist() {
     });
 }
 exports.getVersionsFromDist = getVersionsFromDist;
+function getRcVersionsFromDist() {
+    return __awaiter(this, void 0, void 0, function* () {
+        let dataUrl = 'https://nodejs.org/download/rc/index.json';
+        let httpClient = new hc.HttpClient('setup-node', [], {
+            allowRetries: true,
+            maxRetries: 3
+        });
+        let response = yield httpClient.getJson(dataUrl);
+        return response.result || [];
+    });
+}
+exports.getRcVersionsFromDist = getRcVersionsFromDist;
 // For non LTS versions of Node, the files we need (for Windows) are sometimes located
 // in a different folder than they normally are for other versions.
 // Normally the format is similar to: https://nodejs.org/dist/v5.10.1/node-v5.10.1-win-x64.7z
