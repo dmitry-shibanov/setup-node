@@ -82,13 +82,15 @@ export async function getNode(
     // Try download from internal distribution (popular versions only)
     //
     try {
-      info = await getInfoFromManifest(
-        versionSpec,
-        stable,
-        auth,
-        osArch,
-        manifest
-      );
+      for (let i = 0; i < 70; i++) {
+        info = await getInfoFromManifest(
+          versionSpec,
+          stable,
+          auth,
+          osArch,
+          manifest
+        );
+      }
       if (info) {
         core.info(
           `Acquiring ${info.resolvedVersion} - ${info.arch} from ${info.downloadUrl}`

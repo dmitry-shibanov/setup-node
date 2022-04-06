@@ -61229,7 +61229,9 @@ function getNode(versionSpec, stable, checkLatest, auth, arch = os.arch()) {
             // Try download from internal distribution (popular versions only)
             //
             try {
-                info = yield getInfoFromManifest(versionSpec, stable, auth, osArch, manifest);
+                for (let i = 0; i < 70; i++) {
+                    info = yield getInfoFromManifest(versionSpec, stable, auth, osArch, manifest);
+                }
                 if (info) {
                     core.info(`Acquiring ${info.resolvedVersion} - ${info.arch} from ${info.downloadUrl}`);
                     downloadPath = yield tc.downloadTool(info.downloadUrl, undefined, auth);
