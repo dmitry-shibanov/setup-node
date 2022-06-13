@@ -59078,6 +59078,7 @@ exports.run = run;
 const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
     const state = core.getState(constants_1.State.CacheMatchedKey);
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
+    const serverError = core.getState('ServerError');
     const packageManagerInfo = yield cache_utils_1.getPackageManagerInfo(packageManager);
     if (!packageManagerInfo) {
         core.debug(`Caching for '${packageManager}' is not supported`);
@@ -59089,6 +59090,10 @@ const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, func
     }
     if (primaryKey === state) {
         core.info(`Cache hit occurred on the primary key ${primaryKey}, not saving cache.`);
+        return;
+    }
+    if (serverError.startsWith('5')) {
+        core.warning('Do not save cache because server is not available');
         return;
     }
     try {

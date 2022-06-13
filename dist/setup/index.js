@@ -70425,7 +70425,21 @@ exports.restoreCache = (packageManager, cacheDependencyPath) => __awaiter(void 0
     const primaryKey = `node-cache-${platform}-${packageManager}-${fileHash}`;
     core.debug(`primary key is ${primaryKey}`);
     core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
-    const cacheKey = yield cache.restoreCache([cachePath], primaryKey);
+    let cacheKey = '';
+    try {
+        cacheKey = yield cache.restoreCache([cachePath], primaryKey);
+    }
+    catch (err) {
+        const keys = Object.keys(err);
+        core.info(keys.join(', '));
+        const statusCode = err.statusCode;
+        core.info(statusCode);
+        if (statusCode.toString().startsWith('5')) {
+            core.warning('Not found cache-hit set to false');
+            core.saveState('ServerError', statusCode);
+            cacheKey = '';
+        }
+    }
     core.setOutput('cache-hit', Boolean(cacheKey));
     if (!cacheKey) {
         core.info(`${packageManager} cache is not found`);

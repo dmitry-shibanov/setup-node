@@ -24,6 +24,7 @@ export async function run() {
 const cachePackages = async (packageManager: string) => {
   const state = core.getState(State.CacheMatchedKey);
   const primaryKey = core.getState(State.CachePrimaryKey);
+  const serverError = core.getState('ServerError');
 
   const packageManagerInfo = await getPackageManagerInfo(packageManager);
   if (!packageManagerInfo) {
@@ -46,6 +47,11 @@ const cachePackages = async (packageManager: string) => {
     core.info(
       `Cache hit occurred on the primary key ${primaryKey}, not saving cache.`
     );
+    return;
+  }
+
+  if (serverError.startsWith('5')) {
+    core.warning('Do not save cache because server is not available');
     return;
   }
 

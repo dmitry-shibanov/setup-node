@@ -41,7 +41,20 @@ export const restoreCache = async (
 
   core.saveState(State.CachePrimaryKey, primaryKey);
 
-  const cacheKey = await cache.restoreCache([cachePath], primaryKey);
+  let cacheKey: string | undefined = '';
+  try {
+    cacheKey = await cache.restoreCache([cachePath], primaryKey);
+  } catch (err) {
+    const keys = Object.keys(err as any);
+    core.info(keys.join(', '));
+    const statusCode = (err as any).statusCode;
+    core.info(statusCode);
+    if (statusCode.toString().startsWith('5')) {
+      core.warning('Not found cache-hit set to false');
+      core.saveState('ServerError', statusCode);
+      cacheKey = '';
+    }
+  }
   core.setOutput('cache-hit', Boolean(cacheKey));
 
   if (!cacheKey) {
