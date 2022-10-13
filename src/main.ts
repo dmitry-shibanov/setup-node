@@ -1,10 +1,11 @@
 import * as core from '@actions/core';
+import * as exec from '@actions/exec';
 import * as installer from './installer';
 import fs from 'fs';
 import * as auth from './authutil';
 import * as path from 'path';
 import {restoreCache} from './cache-restore';
-import {URL} from 'url';
+import {isGhes, isCacheFeatureAvailable} from './cache-utils';
 import os = require('os');
 
 export async function run() {
@@ -39,16 +40,15 @@ export async function run() {
       await installer.getNode(version, stable, checkLatest, auth, arch);
     }
 
+    await printEnvDetailsAndSetOutput();
+
     const registryUrl: string = core.getInput('registry-url');
     const alwaysAuth: string = core.getInput('always-auth');
     if (registryUrl) {
       auth.configAuthentication(registryUrl, alwaysAuth);
     }
 
-    if (cache) {
-      if (isGhes()) {
-        throw new Error('Caching is not supported on GHES');
-      }
+    if (cache && isCacheFeatureAvailable()) {
       const cacheDependencyPath = core.getInput('cache-dependency-path');
       await restoreCache(cache, cacheDependencyPath);
     }
@@ -64,13 +64,6 @@ export async function run() {
   } catch (err) {
     core.setFailed(err.message);
   }
-}
-
-function isGhes(): boolean {
-  const ghUrl = new URL(
-    process.env['GITHUB_SERVER_URL'] || 'https://github.com'
-  );
-  return ghUrl.hostname.toUpperCase() !== 'GITHUB.COM';
 }
 
 function resolveVersionInput(): string {
@@ -92,16 +85,55 @@ function resolveVersionInput(): string {
       process.env.GITHUB_WORKSPACE!,
       versionFileInput
     );
+
     if (!fs.existsSync(versionFilePath)) {
       throw new Error(
         `The specified node version file at: ${versionFilePath} does not exist`
       );
     }
+
     version = installer.parseNodeVersionFile(
       fs.readFileSync(versionFilePath, 'utf8')
     );
+
     core.info(`Resolved ${versionFileInput} as ${version}`);
   }
 
   return version;
+}
+
+export async function printEnvDetailsAndSetOutput() {
+  core.startGroup('Environment details');
+
+  const promises = ['node', 'npm', 'yarn'].map(async tool => {
+    const output = await getToolVersion(tool, ['--version']);
+
+    if (tool === 'node') {
+      core.setOutput(`${tool}-version`, output);
+    }
+
+    core.info(`${tool}: ${output}`);
+  });
+
+  await Promise.all(promises);
+
+  core.endGroup();
+}
+
+async function getToolVersion(tool: string, options: string[]) {
+  try {
+    const {stdout, stderr, exitCode} = await exec.getExecOutput(tool, options, {
+      ignoreReturnCode: true,
+      silent: true
+    });
+
+    if (exitCode > 0) {
+      core.warning(`[warning]${stderr}`);
+      return '';
+    }
+
+    return stdout;
+  } catch (err) {
+    return '';
+  }
 }
