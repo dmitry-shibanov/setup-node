@@ -101,10 +101,13 @@ const createRangePreRelease = (
   const [raw, prerelease] = splitVersionSpec(versionSpec);
   const isValidVersion = semver.valid(raw);
   const rawVersion = isValidVersion ? raw : semver.coerce(raw);
+
   if (rawVersion) {
-    range = isValidVersion
-      ? `${rawVersion}-${prerelease.replace(preRelease, `${preRelease}.`)}`
-      : semver.validRange(`^${rawVersion}${preRelease}`);
+    if (`${-prerelease}` !== preRelease) {
+      range = `${rawVersion}-${prerelease.replace(preRelease, `${preRelease}.`)}`;
+    } else {
+      range = semver.validRange(`^${rawVersion}${preRelease}`);
+    }
   }
 
   return range;
