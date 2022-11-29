@@ -73259,10 +73259,12 @@ const createRangePreRelease = (versionSpec, preRelease = '') => {
     const rawVersion = isValidVersion ? raw : semver.coerce(raw);
     if (rawVersion) {
         if (`-${prerelease}` !== preRelease) {
-            range = `${rawVersion}-${prerelease.replace(preRelease, `${preRelease}.`)}`;
+            core.debug('came to full version');
+            range = `${rawVersion}-${prerelease.replace(prerelease, `${prerelease}.`)}`;
         }
         else {
-            range = semver.validRange(`^${rawVersion}${preRelease}`);
+            core.debug('came to range version');
+            range = semver.validRange(`^${rawVersion}${preRelease}-0`);
         }
     }
     core.debug(`prerelease is ${prerelease}, preRelease is ${preRelease}`);
