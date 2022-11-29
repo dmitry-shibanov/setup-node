@@ -73228,7 +73228,7 @@ exports.distributionOf = (versionSpec) => {
         return Distributions.CANARY;
     if (versionSpec.includes(Distributions.NIGHTLY))
         return Distributions.NIGHTLY;
-    if (semver.prerelease(Distributions.RC))
+    if (semver.prerelease(versionSpec))
         return Distributions.RC;
     return Distributions.DEFAULT;
 };

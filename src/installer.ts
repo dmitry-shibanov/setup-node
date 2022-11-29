@@ -41,7 +41,7 @@ export enum Distributions {
 export const distributionOf = (versionSpec: string): Distributions => {
   if (versionSpec.includes(Distributions.CANARY)) return Distributions.CANARY;
   if (versionSpec.includes(Distributions.NIGHTLY)) return Distributions.NIGHTLY;
-  if (semver.prerelease(Distributions.RC)) return Distributions.RC;
+  if (semver.prerelease(versionSpec)) return Distributions.RC;
   return Distributions.DEFAULT;
 };
 
