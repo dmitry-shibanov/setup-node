@@ -73233,7 +73233,11 @@ exports.distributionOf = (versionSpec) => {
     return Distributions.DEFAULT;
 };
 exports.semverVersionMatcherFactory = (range) => {
-    const matcher = (potential) => semver.satisfies(potential, range);
+    const matcher = (potential) => {
+        core.debug(`potential is ${potential}`);
+        return semver.satisfies(potential, range);
+    };
+    core.debug(`range is ${range}`);
     matcher.factory = exports.semverVersionMatcherFactory;
     return matcher;
 };

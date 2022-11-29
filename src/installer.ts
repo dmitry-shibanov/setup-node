@@ -56,8 +56,11 @@ interface VersionMatcher {
 }
 
 export const semverVersionMatcherFactory = (range: string): VersionMatcher => {
-  const matcher = (potential: string): boolean =>
-    semver.satisfies(potential, range);
+  const matcher = (potential: string): boolean =>{
+    core.debug(`potential is ${potential}`)
+    return semver.satisfies(potential, range);
+  }
+  core.debug(`range is ${range}`);
   matcher.factory = semverVersionMatcherFactory;
   return matcher;
 };
