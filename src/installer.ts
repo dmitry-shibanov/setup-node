@@ -65,11 +65,15 @@ export const semverVersionMatcherFactory = (range: string): VersionMatcher => {
 export const canaryRangeVersionMatcherFactory = (
   version: string
 ): VersionMatcher => {
-  const range = createRangePreRelease(version, Distributions.CANARY)!;
+  const {range, includePrerelease} = createRangePreRelease(
+    version,
+    Distributions.CANARY
+  )!;
   const matcher = (potential: string): boolean =>
     semver.satisfies(
       potential.replace(Distributions.CANARY, `${Distributions.CANARY}.`),
-      range
+      range!,
+      {includePrerelease: includePrerelease}
     );
   matcher.factory = canaryRangeVersionMatcherFactory;
   return matcher;
@@ -78,12 +82,16 @@ export const canaryRangeVersionMatcherFactory = (
 export const nightlyRangeVersionMatcherFactory = (
   version: string
 ): VersionMatcher => {
-  const range = createRangePreRelease(version, Distributions.NIGHTLY)!;
+  const {range, includePrerelease} = createRangePreRelease(
+    version,
+    Distributions.NIGHTLY
+  )!;
   const matcher = (potential: string): boolean =>
     distributionOf(potential) === Distributions.NIGHTLY &&
     semver.satisfies(
       potential.replace(Distributions.NIGHTLY, `${Distributions.NIGHTLY}.`),
-      range
+      range!,
+      {includePrerelease: includePrerelease}
     );
   matcher.factory = nightlyRangeVersionMatcherFactory;
   return matcher;
@@ -104,7 +112,10 @@ const createRangePreRelease = (
 
   if (rawVersion) {
     if (`${-prerelease}` !== preRelease) {
-      range = `${rawVersion}-${prerelease.replace(preRelease, `${preRelease}.`)}`;
+      range = `${rawVersion}-${prerelease.replace(
+        preRelease,
+        `${preRelease}.`
+      )}`;
     } else {
       range = semver.validRange(`^${rawVersion}${preRelease}`);
     }
@@ -112,7 +123,7 @@ const createRangePreRelease = (
   core.debug(`prerelease is ${prerelease}, preRelease is ${preRelease}`);
   core.debug(`Version Range for ${versionSpec} is ${range}`);
 
-  return range;
+  return {range, includePrerelease: !isValidVersion};
 };
 
 export function versionMatcherFactory(versionSpec: string): VersionMatcher {
