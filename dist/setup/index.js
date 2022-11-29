@@ -73265,6 +73265,7 @@ const createRangePreRelease = (versionSpec, preRelease = '') => {
             range = semver.validRange(`^${rawVersion}${preRelease}`);
         }
     }
+    core.debug(`Version Range for ${versionSpec} is ${range}`);
     return range;
 };
 function versionMatcherFactory(versionSpec) {
