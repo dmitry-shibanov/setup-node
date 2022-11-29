@@ -73271,9 +73271,9 @@ function versionMatcherFactory(versionSpec) {
     if (validVersion) {
         switch (exports.distributionOf(versionSpec)) {
             case Distributions.CANARY:
-                return exports.canaryRangeVersionMatcherFactory(validVersion);
+                return exports.canaryRangeVersionMatcherFactory(versionSpec);
             case Distributions.NIGHTLY:
-                return exports.nightlyRangeVersionMatcherFactory(validVersion);
+                return exports.nightlyRangeVersionMatcherFactory(versionSpec);
             case Distributions.RC:
             case Distributions.DEFAULT:
                 return exports.semverVersionMatcherFactory(versionSpec);

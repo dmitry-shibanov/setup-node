@@ -117,9 +117,9 @@ export function versionMatcherFactory(versionSpec: string): VersionMatcher {
   if (validVersion) {
     switch (distributionOf(versionSpec)) {
       case Distributions.CANARY:
-        return canaryRangeVersionMatcherFactory(validVersion);
+        return canaryRangeVersionMatcherFactory(versionSpec);
       case Distributions.NIGHTLY:
-        return nightlyRangeVersionMatcherFactory(validVersion);
+        return nightlyRangeVersionMatcherFactory(versionSpec);
       case Distributions.RC:
       case Distributions.DEFAULT:
         return semverVersionMatcherFactory(versionSpec);
