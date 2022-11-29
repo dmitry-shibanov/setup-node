@@ -111,7 +111,7 @@ const createRangePreRelease = (
   const rawVersion = isValidVersion ? raw : semver.coerce(raw);
 
   if (rawVersion) {
-    if (`${-prerelease}` !== preRelease) {
+    if (`-${prerelease}` !== preRelease) {
       range = `${rawVersion}-${prerelease.replace(
         preRelease,
         `${preRelease}.`
