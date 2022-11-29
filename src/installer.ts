@@ -113,7 +113,7 @@ const createRangePreRelease = (
   if (rawVersion) {
     if (`-${prerelease}` !== preRelease) {
       core.debug(`came to full version ${preRelease}`);
-      range = `${rawVersion}-${prerelease.replace(
+      range = `${rawVersion}${`-${prerelease}`.replace(
         preRelease,
         `${preRelease}.`
       )}`;
