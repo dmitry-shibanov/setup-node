@@ -14,7 +14,7 @@ export interface PackageManagerInfo {
 export const supportedPackageManagers: SupportedPackageManagers = {
   npm: {
     lockFilePatterns: ['package-lock.json', 'npm-shrinkwrap.json', 'yarn.lock'],
-    getCacheFolderCommand: 'npm config get cache --ignore-workspaces'
+    getCacheFolderCommand: 'npm --ignore-workspaces config get cache'
   },
   pnpm: {
     lockFilePatterns: ['pnpm-lock.yaml'],
