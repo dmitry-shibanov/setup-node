@@ -18,6 +18,8 @@ export async function run() {
     //
     const version = resolveVersionInput();
 
+    core.info(`RUNNER_TOOL_CACHE is ${process.env.RUNNER_TOOL_CACHE}`);
+
     let arch = core.getInput('architecture');
     const cache = core.getInput('cache');
 

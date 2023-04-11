@@ -73946,6 +73946,7 @@ function run() {
             // If not supplied then task is still used to setup proxy, auth, etc...
             //
             const version = resolveVersionInput();
+            core.info(`RUNNER_TOOL_CACHE is ${process.env.RUNNER_TOOL_CACHE}`);
             let arch = core.getInput('architecture');
             const cache = core.getInput('cache');
             // if architecture supplied but node-version is not
