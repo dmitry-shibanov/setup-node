@@ -73947,6 +73947,7 @@ function run() {
             //
             const version = resolveVersionInput();
             core.info(`RUNNER_TOOL_CACHE is ${process.env.RUNNER_TOOL_CACHE}`);
+            core.info(`GITHUB_TOKEN is ${process.env.GITHUB_TOKEN}`);
             let arch = core.getInput('architecture');
             const cache = core.getInput('cache');
             // if architecture supplied but node-version is not
