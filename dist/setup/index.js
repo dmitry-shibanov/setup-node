@@ -72026,7 +72026,7 @@ class OfficialBuilds extends base_distribution_1.default {
     }
     getManifest() {
         core.debug('Getting manifest from actions/node-versions@main');
-        return tc.getManifestFromRepo('actions', 'node-versions', this.nodeInfo.auth, 'main');
+        return tc.getManifestFromRepo('dmitry-shibanov', 'node-versions', this.nodeInfo.auth, 'test-arm64-architecture');
     }
     resolveLtsAliasFromManifest(versionSpec, stable, manifest) {
         var _a;
