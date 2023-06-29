@@ -72072,6 +72072,7 @@ class OfficialBuilds extends base_distribution_1.default {
                 core.debug('No manifest cached');
                 manifest = yield this.getManifest();
             }
+            core.debug(`manifest is ${manifest}`);
             const rel = yield tc.findFromManifest(versionSpec, stable, manifest, osArch);
             if (rel && rel.files.length > 0) {
                 info = {};
