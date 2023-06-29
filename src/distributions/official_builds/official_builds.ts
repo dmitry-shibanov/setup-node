@@ -230,7 +230,8 @@ export default class OfficialBuilds extends BaseDistribution {
       manifest = await this.getManifest();
     }
 
-    core.debug(`manifest is ${manifest}`);
+    core.debug(`manifest is ${manifest.map(item => item.version).join(', ')}`);
+    core.debug(`manifest is ${manifest.map(item => item.files.map(i => `${i.arch} ${i.filename}`).join('\n')).join(', ')}`);
 
     const rel = await tc.findFromManifest(
       versionSpec,
