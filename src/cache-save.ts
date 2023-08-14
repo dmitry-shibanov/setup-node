@@ -64,7 +64,7 @@ const cachePackages = async (packageManager: string) => {
   core.info(`after globber: ${resolvedPaths.join('\n')}`);
 
   // core.info(`cachePaths real files: ${fs.realpathSync(cachePaths[0])}`);
-  cachePaths = cachePaths.filter(fs.existsSync);
+  cachePaths = resolvedPaths.filter(fs.existsSync);
   core.info(`cachePaths are ${cachePaths} after filter`);
 
   const packageManagerInfo = await getPackageManagerInfo(packageManager);
