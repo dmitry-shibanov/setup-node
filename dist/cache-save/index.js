@@ -60361,23 +60361,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __asyncValues = (this && this.__asyncValues) || function (o) {
-    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-    var m = o[Symbol.asyncIterator], i;
-    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
-    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
-    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const cache = __importStar(__nccwpck_require__(7799));
-const glob = __importStar(__nccwpck_require__(8090));
-const fs_1 = __importDefault(__nccwpck_require__(7147));
-const path = __importStar(__nccwpck_require__(1017));
 const constants_1 = __nccwpck_require__(9042);
 const cache_utils_1 = __nccwpck_require__(1678);
 // Catch and log any unhandled exceptions.  These exceptions can leak out of the uploadChunk method in
@@ -60399,42 +60386,6 @@ function run() {
     });
 }
 exports.run = run;
-function resolvePaths(patterns) {
-    var e_1, _a;
-    var _b;
-    return __awaiter(this, void 0, void 0, function* () {
-        const paths = [];
-        const workspace = (_b = process.env['GITHUB_WORKSPACE']) !== null && _b !== void 0 ? _b : process.cwd();
-        const globber = yield glob.create(patterns.join('\n'), {
-            implicitDescendants: false
-        });
-        try {
-            for (var _c = __asyncValues(globber.globGenerator()), _d; _d = yield _c.next(), !_d.done;) {
-                const file = _d.value;
-                const relativeFile = path
-                    .relative(workspace, file)
-                    .replace(new RegExp(`\\${path.sep}`, 'g'), '/');
-                core.debug(`Matched: ${relativeFile}`);
-                // Paths are made relative so the tar entries are all relative to the root of the workspace.
-                if (relativeFile === '') {
-                    // path.relative returns empty string if workspace and file are equal
-                    paths.push('.');
-                }
-                else {
-                    paths.push(`${relativeFile}`);
-                }
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (_d && !_d.done && (_a = _c.return)) yield _a.call(_c);
-            }
-            finally { if (e_1) throw e_1.error; }
-        }
-        return paths;
-    });
-}
 const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
     const state = core.getState(constants_1.State.CacheMatchedKey);
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
@@ -60448,19 +60399,21 @@ const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, func
     // core.info(`after globber: ${resolvedPaths.join('\n')}`);
     // core.info(`cachePaths real files: ${fs.realpathSync(cachePaths[0])}`);
     // cachePaths = resolvedPaths.map(item => fs.realpathSync(item).toString()).filter(fs.existsSync);
-    cachePaths = cachePaths.filter(fs_1.default.existsSync);
-    core.info(`cachePaths are ${cachePaths} after filter`);
+    // cachePaths = cachePaths.filter(fs.existsSync);
+    // core.info(`cachePaths are ${cachePaths} after filter`);
     const packageManagerInfo = yield cache_utils_1.getPackageManagerInfo(packageManager);
     if (!packageManagerInfo) {
         core.debug(`Caching for '${packageManager}' is not supported`);
         return;
     }
-    if (!cachePaths.length) {
-        // TODO: core.getInput has a bug - it can return undefined despite its definition (tests only?)
-        //       export declare function getInput(name: string, options?: InputOptions): string;
-        const cacheDependencyPath = core.getInput('cache-dependency-path') || '';
-        throw new Error(`Cache folder paths are not retrieved for ${packageManager} with cache-dependency-path = ${cacheDependencyPath}`);
-    }
+    // if (!cachePaths.length) {
+    //   // TODO: core.getInput has a bug - it can return undefined despite its definition (tests only?)
+    //   //       export declare function getInput(name: string, options?: InputOptions): string;
+    //   const cacheDependencyPath = core.getInput('cache-dependency-path') || '';
+    //   throw new Error(
+    //     `Cache folder paths are not retrieved for ${packageManager} with cache-dependency-path = ${cacheDependencyPath}`
+    //   );
+    // }
     if (primaryKey === state) {
         core.info(`Cache hit occurred on the primary key ${primaryKey}, not saving cache.`);
         return;

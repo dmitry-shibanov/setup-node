@@ -24,30 +24,6 @@ export async function run() {
   }
 }
 
-async function resolvePaths(patterns: string[]): Promise<string[]> {
-  const paths: string[] = []
-  const workspace = process.env['GITHUB_WORKSPACE'] ?? process.cwd()
-  const globber = await glob.create(patterns.join('\n'), {
-    implicitDescendants: false
-  })
-
-  for await (const file of globber.globGenerator()) {
-    const relativeFile = path
-      .relative(workspace, file)
-      .replace(new RegExp(`\\${path.sep}`, 'g'), '/')
-    core.debug(`Matched: ${relativeFile}`)
-    // Paths are made relative so the tar entries are all relative to the root of the workspace.
-    if (relativeFile === '') {
-      // path.relative returns empty string if workspace and file are equal
-      paths.push('.')
-    } else {
-      paths.push(`${relativeFile}`)
-    }
-  }
-
-  return paths
-}
-
 const cachePackages = async (packageManager: string) => {
   const state = core.getState(State.CacheMatchedKey);
   const primaryKey = core.getState(State.CachePrimaryKey);
@@ -65,9 +41,9 @@ const cachePackages = async (packageManager: string) => {
 
   // core.info(`cachePaths real files: ${fs.realpathSync(cachePaths[0])}`);
   // cachePaths = resolvedPaths.map(item => fs.realpathSync(item).toString()).filter(fs.existsSync);
-  cachePaths = cachePaths.filter(fs.existsSync);
+  // cachePaths = cachePaths.filter(fs.existsSync);
 
-  core.info(`cachePaths are ${cachePaths} after filter`);
+  // core.info(`cachePaths are ${cachePaths} after filter`);
 
   const packageManagerInfo = await getPackageManagerInfo(packageManager);
   if (!packageManagerInfo) {
@@ -75,14 +51,14 @@ const cachePackages = async (packageManager: string) => {
     return;
   }
 
-  if (!cachePaths.length) {
-    // TODO: core.getInput has a bug - it can return undefined despite its definition (tests only?)
-    //       export declare function getInput(name: string, options?: InputOptions): string;
-    const cacheDependencyPath = core.getInput('cache-dependency-path') || '';
-    throw new Error(
-      `Cache folder paths are not retrieved for ${packageManager} with cache-dependency-path = ${cacheDependencyPath}`
-    );
-  }
+  // if (!cachePaths.length) {
+  //   // TODO: core.getInput has a bug - it can return undefined despite its definition (tests only?)
+  //   //       export declare function getInput(name: string, options?: InputOptions): string;
+  //   const cacheDependencyPath = core.getInput('cache-dependency-path') || '';
+  //   throw new Error(
+  //     `Cache folder paths are not retrieved for ${packageManager} with cache-dependency-path = ${cacheDependencyPath}`
+  //   );
+  // }
 
   if (primaryKey === state) {
     core.info(
