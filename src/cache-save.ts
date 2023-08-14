@@ -30,6 +30,8 @@ const cachePackages = async (packageManager: string) => {
     core.getState(State.CachePaths) || '[]'
   ) as string[];
   core.info(`cachePaths are ${cachePaths}`);
+  core.info(`cachePaths first elemnt is ${cachePaths[0]}`);
+  core.info(`cachePaths real files: ${fs.realpathSync(cachePaths[0])}`);
   cachePaths = cachePaths.filter(fs.existsSync);
   core.info(`cachePaths are ${cachePaths} after filter`);
 
