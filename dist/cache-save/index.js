@@ -60443,11 +60443,12 @@ const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, func
     core.info(`cachePaths first elemnt is ${cachePaths[0]}`);
     core.info(`cachePaths all elements are ${cachePaths.join('\nelement is: ')}`);
     core.info(`cachePaths length is ${cachePaths.length}`);
-    const resolvedPaths = yield resolvePaths(cachePaths);
-    core.info(`after globber length: ${resolvedPaths.length}`);
-    core.info(`after globber: ${resolvedPaths.join('\n')}`);
+    // const resolvedPaths = await resolvePaths(cachePaths);
+    // core.info(`after globber length: ${resolvedPaths.length}`);
+    // core.info(`after globber: ${resolvedPaths.join('\n')}`);
     // core.info(`cachePaths real files: ${fs.realpathSync(cachePaths[0])}`);
-    cachePaths = resolvedPaths.map(item => fs_1.default.realpathSync(item).toString()).filter(fs_1.default.existsSync);
+    // cachePaths = resolvedPaths.map(item => fs.realpathSync(item).toString()).filter(fs.existsSync);
+    cachePaths = cachePaths.filter(fs_1.default.existsSync);
     core.info(`cachePaths are ${cachePaths} after filter`);
     const packageManagerInfo = yield cache_utils_1.getPackageManagerInfo(packageManager);
     if (!packageManagerInfo) {
@@ -60529,7 +60530,7 @@ exports.supportedPackageManagers = {
     pnpm: {
         name: 'pnpm',
         lockFilePatterns: ['pnpm-lock.yaml'],
-        getCacheFolderPath: () => exports.getCommandOutputNotEmpty('pnpm store path --silent', 'Could not get pnpm cache folder path')
+        getCacheFolderPath: () => exports.getCommandOutputNotEmpty('pnpm store path --silent --ignore-workspace-root-check', 'Could not get pnpm cache folder path')
     },
     yarn: {
         name: 'yarn',

@@ -58,13 +58,15 @@ const cachePackages = async (packageManager: string) => {
   core.info(`cachePaths first elemnt is ${cachePaths[0]}`);
   core.info(`cachePaths all elements are ${cachePaths.join('\nelement is: ')}`);
   core.info(`cachePaths length is ${cachePaths.length}`);
-  const resolvedPaths = await resolvePaths(cachePaths);
-  core.info(`after globber length: ${resolvedPaths.length}`);
+  // const resolvedPaths = await resolvePaths(cachePaths);
+  // core.info(`after globber length: ${resolvedPaths.length}`);
 
-  core.info(`after globber: ${resolvedPaths.join('\n')}`);
+  // core.info(`after globber: ${resolvedPaths.join('\n')}`);
 
   // core.info(`cachePaths real files: ${fs.realpathSync(cachePaths[0])}`);
-  cachePaths = resolvedPaths.map(item => fs.realpathSync(item).toString()).filter(fs.existsSync);
+  // cachePaths = resolvedPaths.map(item => fs.realpathSync(item).toString()).filter(fs.existsSync);
+  cachePaths = cachePaths.filter(fs.existsSync);
+
   core.info(`cachePaths are ${cachePaths} after filter`);
 
   const packageManagerInfo = await getPackageManagerInfo(packageManager);
