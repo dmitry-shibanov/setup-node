@@ -32,7 +32,7 @@ export const supportedPackageManagers: SupportedPackageManagers = {
     lockFilePatterns: ['pnpm-lock.yaml'],
     getCacheFolderPath: () =>
       getCommandOutputNotEmpty(
-        'pnpm store path --silent --ignore-workspace-root-check',
+        'pnpm --silent store path', // --ignore-workspace
         'Could not get pnpm cache folder path'
       )
   },

@@ -71263,7 +71263,8 @@ exports.supportedPackageManagers = {
     pnpm: {
         name: 'pnpm',
         lockFilePatterns: ['pnpm-lock.yaml'],
-        getCacheFolderPath: () => exports.getCommandOutputNotEmpty('pnpm store path --silent --ignore-workspace-root-check', 'Could not get pnpm cache folder path')
+        getCacheFolderPath: () => exports.getCommandOutputNotEmpty('pnpm --silent store path', // --ignore-workspace
+        'Could not get pnpm cache folder path')
     },
     yarn: {
         name: 'yarn',
