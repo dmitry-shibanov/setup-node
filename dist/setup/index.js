@@ -71164,6 +71164,7 @@ const restoreCache = (packageManager, cacheDependencyPath) => __awaiter(void 0, 
     }
     const platform = process.env.RUNNER_OS;
     const cachePaths = yield cache_utils_1.getCacheDirectories(packageManagerInfo, cacheDependencyPath);
+    core.info(`Final result from cachePaths: ${cachePaths}`);
     core.saveState(constants_1.State.CachePaths, cachePaths);
     const lockFilePath = cacheDependencyPath
         ? cacheDependencyPath
