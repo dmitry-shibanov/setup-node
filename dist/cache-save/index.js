@@ -60394,7 +60394,9 @@ const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, func
     const state = core.getState(constants_1.State.CacheMatchedKey);
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
     let cachePaths = JSON.parse(core.getState(constants_1.State.CachePaths) || '[]');
+    core.info(`cachePaths are ${cachePaths}`);
     cachePaths = cachePaths.filter(fs_1.default.existsSync);
+    core.info(`cachePaths are ${cachePaths} after filter`);
     const packageManagerInfo = yield cache_utils_1.getPackageManagerInfo(packageManager);
     if (!packageManagerInfo) {
         core.debug(`Caching for '${packageManager}' is not supported`);

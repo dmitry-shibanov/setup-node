@@ -29,7 +29,9 @@ const cachePackages = async (packageManager: string) => {
   let cachePaths = JSON.parse(
     core.getState(State.CachePaths) || '[]'
   ) as string[];
+  core.info(`cachePaths are ${cachePaths}`);
   cachePaths = cachePaths.filter(fs.existsSync);
+  core.info(`cachePaths are ${cachePaths} after filter`);
 
   const packageManagerInfo = await getPackageManagerInfo(packageManager);
   if (!packageManagerInfo) {
