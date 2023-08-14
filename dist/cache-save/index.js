@@ -60396,7 +60396,8 @@ const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, func
     let cachePaths = JSON.parse(core.getState(constants_1.State.CachePaths) || '[]');
     core.info(`cachePaths are ${cachePaths}`);
     core.info(`cachePaths first elemnt is ${cachePaths[0]}`);
-    core.info(`cachePaths real files: ${fs_1.default.realpathSync(cachePaths[0])}`);
+    core.info(`cachePaths all elements are ${cachePaths.join('\nelement is: ')}`);
+    // core.info(`cachePaths real files: ${fs.realpathSync(cachePaths[0])}`);
     cachePaths = cachePaths.filter(fs_1.default.existsSync);
     core.info(`cachePaths are ${cachePaths} after filter`);
     const packageManagerInfo = yield cache_utils_1.getPackageManagerInfo(packageManager);
