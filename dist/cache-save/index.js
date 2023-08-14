@@ -60394,7 +60394,17 @@ const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, func
     const state = core.getState(constants_1.State.CacheMatchedKey);
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
     let cachePaths = JSON.parse(core.getState(constants_1.State.CachePaths) || '[]');
+    core.info(`cachePaths are ${cachePaths}`);
+    core.info(`cachePaths first elemnt is ${cachePaths[0]}`);
+    core.info(`cachePaths all elements are ${cachePaths.join('\nelement is: ')}`);
+    core.info(`cachePaths length is ${cachePaths.length}`);
+    // const resolvedPaths = await resolvePaths(cachePaths);
+    // core.info(`after globber length: ${resolvedPaths.length}`);
+    // core.info(`after globber: ${resolvedPaths.join('\n')}`);
+    // core.info(`cachePaths real files: ${fs.realpathSync(cachePaths[0])}`);
+    // cachePaths = resolvedPaths.map(item => fs.realpathSync(item).toString()).filter(fs.existsSync);
     cachePaths = cachePaths.filter(fs_1.default.existsSync);
+    // core.info(`cachePaths are ${cachePaths} after filter`);
     const packageManagerInfo = yield cache_utils_1.getPackageManagerInfo(packageManager);
     if (!packageManagerInfo) {
         core.debug(`Caching for '${packageManager}' is not supported`);
