@@ -1,7 +1,8 @@
 import * as core from '@actions/core';
 import * as cache from '@actions/cache';
-
+import * as glob from '@actions/glob';
 import fs from 'fs';
+import * as path from 'path';
 
 import {State} from './constants';
 import {getPackageManagerInfo} from './cache-utils';
@@ -23,6 +24,30 @@ export async function run() {
   }
 }
 
+async function resolvePaths(patterns: string[]): Promise<string[]> {
+  const paths: string[] = []
+  const workspace = process.env['GITHUB_WORKSPACE'] ?? process.cwd()
+  const globber = await glob.create(patterns.join('\n'), {
+    implicitDescendants: false
+  })
+
+  for await (const file of globber.globGenerator()) {
+    const relativeFile = path
+      .relative(workspace, file)
+      .replace(new RegExp(`\\${path.sep}`, 'g'), '/')
+    core.debug(`Matched: ${relativeFile}`)
+    // Paths are made relative so the tar entries are all relative to the root of the workspace.
+    if (relativeFile === '') {
+      // path.relative returns empty string if workspace and file are equal
+      paths.push('.')
+    } else {
+      paths.push(`${relativeFile}`)
+    }
+  }
+
+  return paths
+}
+
 const cachePackages = async (packageManager: string) => {
   const state = core.getState(State.CacheMatchedKey);
   const primaryKey = core.getState(State.CachePrimaryKey);
@@ -32,6 +57,12 @@ const cachePackages = async (packageManager: string) => {
   core.info(`cachePaths are ${cachePaths}`);
   core.info(`cachePaths first elemnt is ${cachePaths[0]}`);
   core.info(`cachePaths all elements are ${cachePaths.join('\nelement is: ')}`);
+  core.info(`cachePaths length is ${cachePaths.length}`);
+  const resolvedPaths = await resolvePaths(cachePaths);
+  core.info(`after globber length: ${resolvedPaths.length}`);
+
+  core.info(`after globber: ${resolvedPaths.join('\n')}`);
+
   // core.info(`cachePaths real files: ${fs.realpathSync(cachePaths[0])}`);
   cachePaths = cachePaths.filter(fs.existsSync);
   core.info(`cachePaths are ${cachePaths} after filter`);

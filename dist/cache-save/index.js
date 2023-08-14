@@ -60361,6 +60361,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -60368,7 +60375,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const cache = __importStar(__nccwpck_require__(7799));
+const glob = __importStar(__nccwpck_require__(8090));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
+const path = __importStar(__nccwpck_require__(1017));
 const constants_1 = __nccwpck_require__(9042);
 const cache_utils_1 = __nccwpck_require__(1678);
 // Catch and log any unhandled exceptions.  These exceptions can leak out of the uploadChunk method in
@@ -60390,6 +60399,42 @@ function run() {
     });
 }
 exports.run = run;
+function resolvePaths(patterns) {
+    var e_1, _a;
+    var _b;
+    return __awaiter(this, void 0, void 0, function* () {
+        const paths = [];
+        const workspace = (_b = process.env['GITHUB_WORKSPACE']) !== null && _b !== void 0 ? _b : process.cwd();
+        const globber = yield glob.create(patterns.join('\n'), {
+            implicitDescendants: false
+        });
+        try {
+            for (var _c = __asyncValues(globber.globGenerator()), _d; _d = yield _c.next(), !_d.done;) {
+                const file = _d.value;
+                const relativeFile = path
+                    .relative(workspace, file)
+                    .replace(new RegExp(`\\${path.sep}`, 'g'), '/');
+                core.debug(`Matched: ${relativeFile}`);
+                // Paths are made relative so the tar entries are all relative to the root of the workspace.
+                if (relativeFile === '') {
+                    // path.relative returns empty string if workspace and file are equal
+                    paths.push('.');
+                }
+                else {
+                    paths.push(`${relativeFile}`);
+                }
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (_d && !_d.done && (_a = _c.return)) yield _a.call(_c);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        return paths;
+    });
+}
 const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, function* () {
     const state = core.getState(constants_1.State.CacheMatchedKey);
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
@@ -60397,6 +60442,10 @@ const cachePackages = (packageManager) => __awaiter(void 0, void 0, void 0, func
     core.info(`cachePaths are ${cachePaths}`);
     core.info(`cachePaths first elemnt is ${cachePaths[0]}`);
     core.info(`cachePaths all elements are ${cachePaths.join('\nelement is: ')}`);
+    core.info(`cachePaths length is ${cachePaths.length}`);
+    const resolvedPaths = yield resolvePaths(cachePaths);
+    core.info(`after globber length: ${resolvedPaths.length}`);
+    core.info(`after globber: ${resolvedPaths.join('\n')}`);
     // core.info(`cachePaths real files: ${fs.realpathSync(cachePaths[0])}`);
     cachePaths = cachePaths.filter(fs_1.default.existsSync);
     core.info(`cachePaths are ${cachePaths} after filter`);
